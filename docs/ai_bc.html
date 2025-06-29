@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+
+<html lang="ja">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AI×ブロックチェーン：未来の金融技術融合</title>
+<link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet"/>
+<link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
+            background-color: #FFFFFF;
+            color: #172B4D;
+        }
+        .slide-container {
+            width: 1280px;
+            min-height: 720px;
+            padding: 40px;
+            box-sizing: border-box;
+        }
+        .title {
+            color: #0052CC;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+        .card {
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            padding: 16px;
+            height: 100%;
+            margin-bottom: 20px;
+        }
+        .icon-box {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            margin-bottom: 10px;
+        }
+        .blue-bg {
+            background-color: #0052CC;
+            color: white;
+        }
+        .green-bg {
+            background-color: #36B37E;
+            color: white;
+        }
+        .orange-bg {
+            background-color: #FF8B00;
+            color: white;
+        }
+        .purple-bg {
+            background-color: #6554C0;
+            color: white;
+        }
+        .red-bg {
+            background-color: #DE350B;
+            color: white;
+        }
+        .teal-bg {
+            background-color: #00B8D9;
+            color: white;
+        }
+        .project-card {
+            border-left: 4px solid;
+            padding: 8px 12px;
+            margin-bottom: 12px;
+        }
+        .table-row {
+            display: flex;
+            border-bottom: 1px solid #EEE;
+            padding: 8px 4px;
+        }
+        .table-row:last-child {
+            border-bottom: none;
+        }
+        .divider {
+            height: 2px;
+            background-color: #DFE1E6;
+            margin: 16px 0;
+        }
+        .chip {
+            border-radius: 16px;
+            padding: 4px 10px;
+            margin-right: 6px;
+            margin-bottom: 6px;
+            display: inline-block;
+            font-size: 0.8rem;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+<div class="slide-container">
+<h1 class="title text-3xl text-center mb-6">AI×ブロックチェーン：未来の金融技術融合</h1>
+<!-- 基本概念と相乗効果 -->
+<div class="flex mb-6">
+<div class="w-1/2 pr-4">
+<div class="card bg-blue-50">
+<h2 class="text-xl font-bold mb-3 text-blue-700">基本概念</h2>
+<div class="flex items-center justify-around mb-4">
+<div class="text-center">
+<div class="icon-box blue-bg mx-auto">
+<i class="fas fa-brain text-2xl"></i>
+</div>
+<p class="font-bold">AI（人工知能）</p>
+<p class="text-sm">データから学習し判断する技術</p>
+</div>
+<div class="text-3xl">+</div>
+<div class="text-center">
+<div class="icon-box green-bg mx-auto">
+<i class="fas fa-link text-2xl"></i>
+</div>
+<p class="font-bold">ブロックチェーン</p>
+<p class="text-sm">分散型で改ざん困難な台帳技術</p>
+</div>
+</div>
+</div>
+</div>
+<div class="w-1/2 pl-4">
+<div class="card bg-green-50">
+<h2 class="text-xl font-bold mb-3 text-green-700">技術の相乗効果</h2>
+<ul class="list-disc pl-5">
+<li class="mb-2"><span class="font-bold">信頼性の向上</span>：AIの判断をブロックチェーンで記録・検証可能に</li>
+<li class="mb-2"><span class="font-bold">自動化の進化</span>：スマートコントラクトにAIを組み込み高度な自動判断</li>
+<li class="mb-2"><span class="font-bold">データ品質向上</span>：ブロックチェーン上の高品質データでAI精度向上</li>
+<li><span class="font-bold">セキュリティ強化</span>：AIによる不正検知とブロックチェーンの改ざん防止</li>
+</ul>
+</div>
+</div>
+</div>
+<!-- 2025年最新市場データ -->
+<div class="card bg-purple-50 mb-6">
+<h2 class="text-xl font-bold mb-4 text-purple-700">2025年最新市場データ</h2>
+<div class="flex">
+<div class="w-1/2 pr-4">
+<div style="height: 220px;">
+<canvas id="marketChart"></canvas>
+</div>
+<p class="text-xs text-center mt-2">出典：Fortune Business Insights &amp; DemandSage (2025年レポート)</p>
+</div>
+<div class="w-1/2 pl-4">
+<div class="bg-white rounded-lg p-3 mb-3">
+<h3 class="font-bold text-purple-700 mb-2">注目の市場統計（2025）</h3>
+<ul class="text-sm">
+<li class="flex items-start mb-3">
+<i class="fas fa-chart-line text-purple-700 mr-2 mt-1"></i>
+<div>
+<p class="font-bold">年間成長率 23.6%</p>
+<p>ブロックチェーンAI市場は2027年までに9億7360万米ドルに到達予測</p>
+</div>
+</li>
+<li class="flex items-start mb-3">
+<i class="fas fa-building text-purple-700 mr-2 mt-1"></i>
+<div>
+<p class="font-bold">企業導入率 80%</p>
+<p>グローバル企業の8割がブロックチェーンとAIの組み合わせを検討中または導入済み</p>
+</div>
+</li>
+<li class="flex items-start">
+<i class="fas fa-rocket text-purple-700 mr-2 mt-1"></i>
+<div>
+<p class="font-bold">AI×ブロックチェーン活動 86%増加</p>
+<p>2024年から2025年にかけて活動が急増（DappRadar調査）</p>
+</div>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+<!-- 日本企業の実証実験事例 -->
+<div class="card bg-teal-50 mb-6">
+<h2 class="text-xl font-bold mb-4 text-teal-700">日本企業の実証実験事例（2025）</h2>
+<div class="flex flex-wrap">
+<div class="w-1/3 px-2 mb-4">
+<div class="bg-white rounded-lg p-3 h-full">
+<div class="teal-bg icon-box mb-2">
+<i class="fas fa-university text-xl"></i>
+</div>
+<h3 class="font-bold">ソニー銀行×Sunrise</h3>
+<p class="text-sm">金融機関向けブロックチェーン基盤「Sunrise」を活用した金融商品の自動推奨AIシステムの実証実験を開始</p>
+<div class="mt-2">
+<span class="chip bg-teal-600">フィンテック</span>
+<span class="chip bg-blue-600">パーソナライゼーション</span>
+</div>
+</div>
+</div>
+<div class="w-1/3 px-2 mb-4">
+<div class="bg-white rounded-lg p-3 h-full">
+<div class="teal-bg icon-box mb-2">
+<i class="fas fa-pills text-xl"></i>
+</div>
+<h3 class="font-bold">サスメド×AWS</h3>
+<p class="text-sm">臨床試験データの信頼性確保と効率化のため、AIとブロックチェーン技術を活用したヘルスケアデータプラットフォームを構築</p>
+<div class="mt-2">
+<span class="chip bg-red-600">ヘルスケア</span>
+<span class="chip bg-green-600">データ管理</span>
+</div>
+</div>
+</div>
+<div class="w-1/3 px-2 mb-4">
+<div class="bg-white rounded-lg p-3 h-full">
+<div class="teal-bg icon-box mb-2">
+<i class="fas fa-store text-xl"></i>
+</div>
+<h3 class="font-bold">楽天グループ「AIエンパワーメント」</h3>
+<p class="text-sm">AIによる需要予測と在庫管理の最適化で物流センターの在庫を平均3〜4割削減、ブロックチェーンで取引透明性を確保</p>
+<div class="mt-2">
+<span class="chip bg-orange-600">小売</span>
+<span class="chip bg-purple-600">サプライチェーン</span>
+</div>
+</div>
+</div>
+</div>
+<div class="mt-2 text-center text-sm">
+<p>注目イベント：<span class="font-bold">Japan Fintech Week 2025</span> &amp; <span class="font-bold">TEAMZ Summit 2025</span> で多数のAI×ブロックチェーン実証事例を発表予定</p>
+</div>
+</div>
+<!-- 主要分散型AIプロジェクト -->
+<div class="card bg-red-50 mb-6">
+<h2 class="text-xl font-bold mb-3 text-red-700">主要分散型AIプロジェクト（2025）</h2>
+<div class="flex">
+<div class="w-3/5 pr-4">
+<div class="project-card border-red-600 bg-white">
+<div class="flex items-center">
+<div class="red-bg icon-box mr-3">
+<i class="fas fa-network-wired text-lg"></i>
+</div>
+<div>
+<h3 class="font-bold">Bittensor (TAO)</h3>
+<p class="text-xs">時価総額：$13.2B（2025年6月時点）</p>
+</div>
+</div>
+<p class="text-sm mt-2">分散型機械学習ネットワークを構築し、AIモデル提供者にTAOトークンで報酬を支払うエコシステム。2025年上半期で市場活動が86%増加。</p>
+</div>
+<div class="project-card border-purple-600 bg-white">
+<div class="flex items-center">
+<div class="purple-bg icon-box mr-3">
+<i class="fas fa-robot text-lg"></i>
+</div>
+<div>
+<h3 class="font-bold">SingularityNET (AGIX)</h3>
+<p class="text-xs">時価総額：$2.8B（2025年6月時点）</p>
+</div>
+</div>
+<p class="text-sm mt-2">AIサービスの分散型マーケットプレイス。2025年には複数のブロックチェーンをつなぐクロスチェーンブリッジを拡大し、AGIX活用範囲を広げている。</p>
+</div>
+<div class="project-card border-green-600 bg-white">
+<div class="flex items-center">
+<div class="green-bg icon-box mr-3">
+<i class="fas fa-microchip text-lg"></i>
+</div>
+<div>
+<h3 class="font-bold">Fetch.ai (FET)</h3>
+<p class="text-xs">時価総額：$1.6B（2025年6月時点）</p>
+</div>
+</div>
+<p class="text-sm mt-2">自律型AIエージェントのためのプラットフォーム。データ分析やDeFiトレーディングなどを実行する自律エージェントを開発・展開可能。</p>
+</div>
+</div>
+<div class="w-2/5 pl-4">
+<div class="bg-white rounded-lg p-3 h-full">
+<h3 class="font-bold text-red-700 mb-2">分散型AI vs 中央集権型AI</h3>
+<div class="table-row font-bold">
+<div class="w-1/3">比較項目</div>
+<div class="w-1/3">分散型AI</div>
+<div class="w-1/3">中央集権型AI</div>
+</div>
+<div class="table-row">
+<div class="w-1/3">データ所有権</div>
+<div class="w-1/3">ユーザー保持</div>
+<div class="w-1/3">企業管理</div>
+</div>
+<div class="table-row">
+<div class="w-1/3">トレーニング</div>
+<div class="w-1/3">分散コンピューティング</div>
+<div class="w-1/3">中央サーバー</div>
+</div>
+<div class="table-row">
+<div class="w-1/3">透明性</div>
+<div class="w-1/3">高い</div>
+<div class="w-1/3">限定的</div>
+</div>
+<div class="table-row">
+<div class="w-1/3">収益分配</div>
+<div class="w-1/3">コミュニティへ</div>
+<div class="w-1/3">企業独占</div>
+</div>
+<div class="divider"></div>
+<p class="text-sm font-bold text-red-700">注目動向：</p>
+<p class="text-xs">グレースケール社が2025年5月に分散型AIファンドを立ち上げ、ブロックチェーンとAIのクロスオーバー市場の成長を見込む投資を開始</p>
+</div>
+</div>
+</div>
+</div>
+<!-- 実用事例 -->
+<div class="mb-6">
+<div class="card bg-orange-50">
+<h2 class="text-xl font-bold mb-4 text-orange-700">フィンテックにおける実用事例</h2>
+<div class="flex flex-wrap">
+<div class="w-1/4 px-2 mb-3">
+<div class="bg-white rounded-lg p-3 h-full">
+<div class="orange-bg icon-box mx-auto">
+<i class="fas fa-shield-alt text-xl"></i>
+</div>
+<h3 class="text-center font-bold">不正検知システム</h3>
+<p class="text-xs text-center">AIが疑わしい取引を検出し、ブロックチェーンで監査証跡を保存</p>
+<p class="text-xs text-center mt-2 text-orange-700 font-bold">導入効果：不正取引 62%減少</p>
+</div>
+</div>
+<div class="w-1/4 px-2 mb-3">
+<div class="bg-white rounded-lg p-3 h-full">
+<div class="orange-bg icon-box mx-auto">
+<i class="fas fa-exchange-alt text-xl"></i>
+</div>
+<h3 class="text-center font-bold">クロスボーダー決済</h3>
+<p class="text-xs text-center">AIによる為替レート最適化と、ブロックチェーンによる即時決済の実現</p>
+<p class="text-xs text-center mt-2 text-orange-700 font-bold">導入効果：手数料 80%削減</p>
+</div>
+</div>
+<div class="w-1/4 px-2 mb-3">
+<div class="bg-white rounded-lg p-3 h-full">
+<div class="orange-bg icon-box mx-auto">
+<i class="fas fa-robot text-xl"></i>
+</div>
+<h3 class="text-center font-bold">自動資産運用</h3>
+<p class="text-xs text-center">AIによる投資判断と、ブロックチェーンでの安全な資産管理の融合</p>
+<p class="text-xs text-center mt-2 text-orange-700 font-bold">導入効果：運用効率 35%向上</p>
+</div>
+</div>
+<div class="w-1/4 px-2 mb-3">
+<div class="bg-white rounded-lg p-3 h-full">
+<div class="orange-bg icon-box mx-auto">
+<i class="fas fa-id-card text-xl"></i>
+</div>
+<h3 class="text-center font-bold">デジタルID管理</h3>
+<p class="text-xs text-center">AIによる本人認証とブロックチェーンによるID情報の安全な管理</p>
+<p class="text-xs text-center mt-2 text-orange-700 font-bold">導入効果：認証時間 90%短縮</p>
+</div>
+</div>
+</div>
+<div class="mt-3">
+<div class="bg-white rounded-lg p-3">
+<h3 class="font-bold text-orange-700 mb-2">2025年の新たな実用事例</h3>
+<div class="flex">
+<div class="w-1/2 pr-3">
+<div class="flex items-start mb-2">
+<i class="fas fa-search-dollar text-orange-700 mr-2 mt-1"></i>
+<div>
+<p class="font-bold text-sm">AI強化型スマートコントラクト</p>
+<p class="text-xs">AIによる市場条件判断で自動変更する融資条件やローン契約</p>
+</div>
+</div>
+<div class="flex items-start">
+<i class="fas fa-user-lock text-orange-700 mr-2 mt-1"></i>
+<div>
+<p class="font-bold text-sm">プライバシー保護AI分析</p>
+<p class="text-xs">個人データを暗号化したまま分析可能な金融リスク評価システム</p>
+</div>
+</div>
+</div>
+<div class="w-1/2 pl-3">
+<div class="flex items-start mb-2">
+<i class="fas fa-comment-dots text-orange-700 mr-2 mt-1"></i>
+<div>
+<p class="font-bold text-sm">分散型金融アドバイザー</p>
+<p class="text-xs">ブロックチェーン上で動作する自律型AIファイナンシャルアドバイザー</p>
+</div>
+</div>
+<div class="flex items-start">
+<i class="fas fa-sync text-orange-700 mr-2 mt-1"></i>
+<div>
+<p class="font-bold text-sm">リアルタイム規制対応システム</p>
+<p class="text-xs">AIが法規制変更を検知し、ブロックチェーンで自動コンプライアンス対応</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- 2025年トレンド予測 -->
+<div class="card bg-blue-50 mb-6">
+<h2 class="text-xl font-bold mb-4 text-blue-700">2025年トレンド予測</h2>
+<div class="flex">
+<div class="w-1/2 pr-4">
+<div class="bg-white rounded-lg p-3 h-full">
+<h3 class="font-bold text-blue-700 mb-2">グローバルトレンド</h3>
+<ul class="text-sm">
+<li class="mb-2 flex items-start">
+<i class="fas fa-check-circle text-blue-700 mr-2 mt-1"></i>
+<span><span class="font-bold">ハイブリッドブロックチェーン</span>：公開・プライベート両方の特性を活かしたAI連携（市場シェア38%）</span>
+</li>
+<li class="mb-2 flex items-start">
+<i class="fas fa-check-circle text-blue-700 mr-2 mt-1"></i>
+<span><span class="font-bold">AI×分散型台帳×IoT</span>：3つの技術融合によるサプライチェーン革新</span>
+</li>
+<li class="mb-2 flex items-start">
+<i class="fas fa-check-circle text-blue-700 mr-2 mt-1"></i>
+<span><span class="font-bold">AIガバナンス透明化</span>：ブロックチェーンによるAI判断経路の記録と検証</span>
+</li>
+<li class="flex items-start">
+<i class="fas fa-check-circle text-blue-700 mr-2 mt-1"></i>
+<span><span class="font-bold">分散型データマーケット</span>：AIトレーニング用データの安全な売買プラットフォーム</span>
+</li>
+</ul>
+</div>
+</div>
+<div class="w-1/2 pl-4">
+<div class="bg-white rounded-lg p-3 h-full">
+<h3 class="font-bold text-blue-700 mb-2">日本市場の特徴と展望</h3>
+<ul class="text-sm">
+<li class="mb-2 flex items-start">
+<i class="fas fa-check-circle text-blue-700 mr-2 mt-1"></i>
+<span><span class="font-bold">地域創生×フィンテック</span>：地方銀行によるAI審査×ブロックチェーン契約の中小企業支援</span>
+</li>
+<li class="mb-2 flex items-start">
+<i class="fas fa-check-circle text-blue-700 mr-2 mt-1"></i>
+<span><span class="font-bold">EXPO 2025デジタルウォレット</span>：大阪・関西万博での実証実験から社会実装へ</span>
+</li>
+<li class="mb-2 flex items-start">
+<i class="fas fa-check-circle text-blue-700 mr-2 mt-1"></i>
+<span><span class="font-bold">金融×医療データ連携</span>：保険料と健康データを連動させるAIシステム</span>
+</li>
+<li class="flex items-start">
+<i class="fas fa-check-circle text-blue-700 mr-2 mt-1"></i>
+<span><span class="font-bold">自律型組織（DAO）</span>：日本発のブロックチェーン×AI自動運営システム</span>
+</li>
+</ul>
+<div class="divider"></div>
+<p class="text-xs text-center">※内閣府「統合イノベーション戦略2025」でもAI×ブロックチェーン連携を重点分野に指定</p>
+</div>
+</div>
+</div>
+</div>
+<div class="text-center mt-4 text-sm text-gray-600">
+<p class="text-xs mt-1">データ出典：Fortune Business Insights, DappRadar, IDC Japan, グレースケール・インベストメンツ (2025)</p>
+</div>
+</div>
+<script></script></body></html>
