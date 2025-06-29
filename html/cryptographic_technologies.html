@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ブロックチェーン基礎技術：ハッシュ関数・公開鍵暗号・電子署名</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <style>
+        .demo-box {
+            transition: all 0.3s ease;
+            border: 2px solid #e5e7eb;
+        }
+        .demo-box:hover {
+            border-color: #3b82f6;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+        }
+        .hash-output {
+            font-family: 'Courier New', monospace;
+            word-break: break-all;
+        }
+        .process-step {
+            opacity: 0.3;
+            transition: opacity 0.5s ease;
+        }
+        .process-step.active {
+            opacity: 1;
+        }
+        .arrow {
+            font-size: 2rem;
+            color: #3b82f6;
+            margin: 1rem 0;
+        }
+        @media print {
+            body { font-size: 12px; }
+            .no-print { display: none; }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 leading-relaxed">
+    <!-- Header -->
+    <header class="bg-blue-800 text-white py-8">
+        <div class="container mx-auto px-4">
+            <h1 class="text-4xl font-bold text-center mb-2">ハッシュ関数・公開鍵暗号・電子署名</h1>
+        </div>
+    </header>
+
+    <!-- Introduction -->
+    <section class="py-12 bg-white">
+        <div class="container mx-auto px-4">
+            <div class="max-w-4xl mx-auto">
+                <h2 class="text-3xl font-bold mb-6 text-center text-blue-800">なぜこれらの技術が重要なのか？</h2>
+                <div class="grid md:grid-cols-3 gap-6">
+                    <div class="text-center p-6 bg-blue-50 rounded-lg">
+                        <i class="fas fa-shield-alt text-4xl text-blue-600 mb-4"></i>
+                        <h3 class="text-xl font-semibold mb-2">データの完全性</h3>
+                        <p>ハッシュ関数でデータの改ざんを検出</p>
+                    </div>
+                    <div class="text-center p-6 bg-green-50 rounded-lg">
+                        <i class="fas fa-key text-4xl text-green-600 mb-4"></i>
+                        <h3 class="text-xl font-semibold mb-2">安全な通信</h3>
+                        <p>公開鍵暗号で秘匿通信を実現</p>
+                    </div>
+                    <div class="text-center p-6 bg-purple-50 rounded-lg">
+                        <i class="fas fa-signature text-4xl text-purple-600 mb-4"></i>
+                        <h3 class="text-xl font-semibold mb-2">身元証明</h3>
+                        <p>電子署名で送信者を確実に特定</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Hash Function Section -->
+    <section class="py-12 bg-gray-50">
+        <div class="container mx-auto px-4">
+            <div class="max-w-6xl mx-auto">
+                <h2 class="text-3xl font-bold mb-8 text-center text-blue-800">
+                    <i class="fas fa-fingerprint mr-3"></i>1. ハッシュ関数
+                </h2>
+
+                <div class="grid lg:grid-cols-2 gap-8 mb-8">
+                    <div class="bg-white p-6 rounded-lg shadow-md">
+                        <h3 class="text-2xl font-semibold mb-4 text-green-700">ハッシュ関数とは？</h3>
+                        <ul class="space-y-3 text-lg">
+                            <li><i class="fas fa-arrow-right text-blue-500 mr-2"></i>任意の長さのデータを固定長の値（ハッシュ値）に変換</li>
+                            <li><i class="fas fa-equals text-blue-500 mr-2"></i>同じデータからは必ず同じハッシュ値が生成される</li>
+                            <li><i class="fas fa-exclamation-triangle text-red-500 mr-2"></i>データが少しでも変わると、ハッシュ値が大きく変わる</li>
+                            <li><i class="fas fa-arrow-left text-gray-500 mr-2"></i>ハッシュ値から元のデータは復元できない（一方向性）</li>
+                        </ul>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-lg shadow-md">
+                        <h3 class="text-2xl font-semibold mb-4 text-green-700">実際に試してみよう</h3>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium mb-2">テキストを入力してください：</label>
+                                <input type="text" id="hashInput" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="例：Hello, World!" value="Hello, World!">
+                            </div>
+                            <button onclick="calculateHash()" class="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition duration-200">
+                                <i class="fas fa-calculator mr-2"></i>SHA-256ハッシュ値を計算
+                            </button>
+                            <div class="bg-gray-100 p-4 rounded-lg">
+                                <label class="block text-sm font-medium mb-2">ハッシュ値（SHA-256）：</label>
+                                <div id="hashOutput" class="hash-output bg-white p-3 border rounded text-sm min-h-12 overflow-wrap break-words">ここにハッシュ値が表示されます</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Data Integrity Demo -->
+                <div class="bg-white p-6 rounded-lg shadow-md mb-8">
+                    <h3 class="text-2xl font-semibold mb-4 text-red-700">データ改ざん検出実験</h3>
+                    <p class="mb-4 text-gray-700">以下の2つのテキストのハッシュ値を比較してみましょう。わずかな違いでもハッシュ値が大きく変わることが確認できます。</p>
+
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium mb-2">元のデータ：</label>
+                            <textarea id="originalData" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent h-24">この契約書の内容に同意します。金額は1000円です。</textarea>
+                            <div class="mt-2 bg-gray-100 p-3 rounded">
+                                <div class="text-sm text-gray-600">ハッシュ値：</div>
+                                <div id="originalHash" class="hash-output text-xs break-all">-</div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium mb-2">改ざん後のデータ：</label>
+                            <textarea id="tamperedData" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent h-24">この契約書の内容に同意します。金額は100000円です。</textarea>
+                            <div class="mt-2 bg-red-100 p-3 rounded">
+                                <div class="text-sm text-gray-600">ハッシュ値：</div>
+                                <div id="tamperedHash" class="hash-output text-xs break-all">-</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button onclick="compareHashes()" class="mt-4 w-full bg-red-600 text-white py-3 px-4 rounded-lg hover:bg-red-700 transition duration-200">
+                        <i class="fas fa-search mr-2"></i>改ざん検出を実行
+                    </button>
+
+                    <div id="tamperResult" class="mt-4 p-4 rounded-lg hidden">
+                        <div class="flex items-center">
+                            <i id="tamperIcon" class="text-2xl mr-3"></i>
+                            <span id="tamperMessage" class="text-lg font-semibold"></span>
+                        </div>
+                        <p id="tamperExplanation" class="mt-2 text-gray-700"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Public Key Cryptography Section -->
+    <section class="py-12 bg-white">
+        <div class="container mx-auto px-4">
+            <div class="max-w-6xl mx-auto">
+                <h2 class="text-3xl font-bold mb-8 text-center text-blue-800">
+                    <i class="fas fa-key mr-3"></i>2. 公開鍵暗号（RSA暗号）
+                </h2>
+
+                <div class="grid lg:grid-cols-2 gap-8 mb-8">
+                    <div class="bg-blue-50 p-6 rounded-lg">
+                        <h3 class="text-2xl font-semibold mb-4 text-blue-700">従来の暗号（共通鍵暗号）の問題</h3>
+                        <div class="space-y-3">
+                            <div class="flex items-center bg-white p-3 rounded">
+                                <i class="fas fa-user text-blue-500 mr-3"></i>
+                                <span>送信者</span>
+                            </div>
+                            <div class="text-center">
+                                <i class="fas fa-key text-red-500 text-2xl"></i>
+                                <p class="text-sm text-red-600 mt-1">同じ鍵を事前に共有する必要がある</p>
+                                <p class="text-xs text-red-500">→ 鍵の受け渡しが危険</p>
+                            </div>
+                            <div class="flex items-center bg-white p-3 rounded">
+                                <i class="fas fa-user text-green-500 mr-3"></i>
+                                <span>受信者</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-green-50 p-6 rounded-lg">
+                        <h3 class="text-2xl font-semibold mb-4 text-green-700">公開鍵暗号の解決策</h3>
+                        <div class="space-y-3">
+                            <div class="flex items-center bg-white p-3 rounded">
+                                <i class="fas fa-user text-blue-500 mr-3"></i>
+                                <span>送信者</span>
+                                <i class="fas fa-key text-blue-500 ml-auto"></i>
+                                <span class="text-sm text-blue-600 ml-1">公開鍵で暗号化</span>
+                            </div>
+                            <div class="text-center">
+                                <i class="fas fa-globe text-green-500 text-2xl"></i>
+                                <p class="text-sm text-green-600 mt-1">公開鍵は誰でも知ってOK</p>
+                                <p class="text-xs text-green-500">→ 安全に鍵を公開できる</p>
+                            </div>
+                            <div class="flex items-center bg-white p-3 rounded">
+                                <i class="fas fa-user text-green-500 mr-3"></i>
+                                <span>受信者</span>
+                                <i class="fas fa-key text-red-500 ml-auto"></i>
+                                <span class="text-sm text-red-600 ml-1">秘密鍵で復号化</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- RSA Demo -->
+                <div class="bg-white border-2 border-gray-200 p-6 rounded-lg shadow-md">
+                    <h3 class="text-2xl font-semibold mb-4 text-purple-700">RSA暗号デモンストレーション</h3>
+                    <p class="mb-6 text-gray-700">実際にRSA暗号を使ってメッセージを暗号化・復号化してみましょう。鍵ペアを生成してから暗号化を行います。</p>
+
+                    <div class="space-y-6">
+                        <div class="flex flex-wrap gap-4">
+                            <button onclick="generateRSAKeys()" class="bg-purple-600 text-white py-2 px-4 rounded-lg hover:bg-purple-700 transition duration-200">
+                                <i class="fas fa-cog mr-2"></i>RSA鍵ペアを生成
+                            </button>
+                            <div id="keyStatus" class="flex items-center text-gray-600">
+                                <i class="fas fa-info-circle mr-2"></i>鍵ペアを生成してください
+                            </div>
+                        </div>
+
+                        <div class="grid md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-sm font-medium mb-2">暗号化するメッセージ：</label>
+                                <textarea id="rsaMessage" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent h-24" placeholder="暗号化したいメッセージを入力してください">秘密のメッセージです</textarea>
+                                <button onclick="encryptMessage()" class="mt-2 w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition duration-200" disabled id="encryptBtn">
+                                    <i class="fas fa-lock mr-2"></i>公開鍵で暗号化
+                                </button>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium mb-2">暗号化されたデータ：</label>
+                                <div id="encryptedMessage" class="w-full p-3 border bg-gray-100 rounded-lg h-24 overflow-y-auto text-xs hash-output">暗号化ボタンを押してください</div>
+                                <button onclick="decryptMessage()" class="mt-2 w-full bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition duration-200" disabled id="decryptBtn">
+                                    <i class="fas fa-unlock mr-2"></i>秘密鍵で復号化
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="bg-green-50 p-4 rounded-lg">
+                            <label class="block text-sm font-medium mb-2">復号化結果：</label>
+                            <div id="decryptedMessage" class="bg-white p-3 border rounded-lg min-h-12">復号化ボタンを押してください</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- RSA Explanation -->
+                <div class="mt-8 bg-yellow-50 p-6 rounded-lg border-l-4 border-yellow-400">
+                    <h4 class="text-xl font-semibold mb-3 text-yellow-800">RSA暗号の仕組み</h4>
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div>
+                            <h5 class="font-semibold mb-2">数学的基礎：</h5>
+                            <ul class="space-y-1 text-sm">
+                                <li>• 2つの大きな素数（p, q）を選択</li>
+                                <li>• n = p × q を計算</li>
+                                <li>• 公開鍵と秘密鍵を生成</li>
+                                <li>• 素因数分解の困難性を利用</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h5 class="font-semibold mb-2">セキュリティ：</h5>
+                            <ul class="space-y-1 text-sm">
+                                <li>• 鍵長が長いほど安全（現在2048bit推奨）</li>
+                                <li>• 公開鍵から秘密鍵の推測は現実的に不可能</li>
+                                <li>• HTTPS、メール暗号化で広く使用</li>
+                                <li>• 量子コンピュータ時代の対策が課題</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Digital Signature Section -->
+    <section class="py-12 bg-gray-50">
+        <div class="container mx-auto px-4">
+            <div class="max-w-6xl mx-auto">
+                <h2 class="text-3xl font-bold mb-8 text-center text-blue-800">
+                    <i class="fas fa-signature mr-3"></i>3. 電子署名
+                </h2>
+
+                <div class="bg-white p-6 rounded-lg shadow-md mb-8">
+                    <h3 class="text-2xl font-semibold mb-4 text-green-700">電子署名の目的</h3>
+                    <div class="grid md:grid-cols-3 gap-6">
+                        <div class="text-center p-4 bg-blue-50 rounded-lg">
+                            <i class="fas fa-user-check text-3xl text-blue-600 mb-3"></i>
+                            <h4 class="font-semibold">認証</h4>
+                            <p class="text-sm text-gray-600">誰が送信したかを証明</p>
+                        </div>
+                        <div class="text-center p-4 bg-green-50 rounded-lg">
+                            <i class="fas fa-shield-alt text-3xl text-green-600 mb-3"></i>
+                            <h4 class="font-semibold">完全性</h4>
+                            <p class="text-sm text-gray-600">データが改ざんされていないことを証明</p>
+                        </div>
+                        <div class="text-center p-4 bg-purple-50 rounded-lg">
+                            <i class="fas fa-ban text-3xl text-purple-600 mb-3"></i>
+                            <h4 class="font-semibold">否認防止</h4>
+                            <p class="text-sm text-gray-600">後から「送信していない」と言い逃れできない</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Digital Signature Process -->
+                <div class="bg-white p-6 rounded-lg shadow-md mb-8">
+                    <h3 class="text-2xl font-semibold mb-6 text-purple-700">電子署名のプロセス</h3>
+
+                    <div class="grid lg:grid-cols-2 gap-8">
+                        <!-- Signing Process -->
+                        <div class="border-2 border-blue-200 p-4 rounded-lg">
+                            <h4 class="text-xl font-semibold mb-4 text-blue-700 text-center">署名生成（送信者）</h4>
+                            <div class="space-y-4">
+                                <div class="process-step active" id="sign-step-1">
+                                    <div class="flex items-center bg-green-100 p-3 rounded">
+                                        <i class="fas fa-file-alt text-green-600 mr-3"></i>
+                                        <span>1. 文書を準備</span>
+                                    </div>
+                                </div>
+                                <div class="arrow text-center process-step" id="sign-step-arrow-1">↓</div>
+                                <div class="process-step" id="sign-step-2">
+                                    <div class="flex items-center bg-blue-100 p-3 rounded">
+                                        <i class="fas fa-fingerprint text-blue-600 mr-3"></i>
+                                        <span>2. ハッシュ値を計算</span>
+                                    </div>
+                                </div>
+                                <div class="arrow text-center process-step" id="sign-step-arrow-2">↓</div>
+                                <div class="process-step" id="sign-step-3">
+                                    <div class="flex items-center bg-red-100 p-3 rounded">
+                                        <i class="fas fa-key text-red-600 mr-3"></i>
+                                        <span>3. 秘密鍵で暗号化</span>
+                                    </div>
+                                </div>
+                                <div class="arrow text-center process-step" id="sign-step-arrow-3">↓</div>
+                                <div class="process-step" id="sign-step-4">
+                                    <div class="flex items-center bg-yellow-100 p-3 rounded">
+                                        <i class="fas fa-signature text-yellow-600 mr-3"></i>
+                                        <span>4. 電子署名完成</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Verification Process -->
+                        <div class="border-2 border-green-200 p-4 rounded-lg">
+                            <h4 class="text-xl font-semibold mb-4 text-green-700 text-center">署名検証（受信者）</h4>
+                            <div class="space-y-4">
+                                <div class="process-step" id="verify-step-1">
+                                    <div class="flex items-center bg-green-100 p-3 rounded">
+                                        <i class="fas fa-download text-green-600 mr-3"></i>
+                                        <span>1. 文書と署名を受信</span>
+                                    </div>
+                                </div>
+                                <div class="arrow text-center process-step" id="verify-step-arrow-1">↓</div>
+                                <div class="process-step" id="verify-step-2">
+                                    <div class="flex items-center bg-blue-100 p-3 rounded">
+                                        <i class="fas fa-fingerprint text-blue-600 mr-3"></i>
+                                        <span>2. 文書のハッシュ値を計算</span>
+                                    </div>
+                                </div>
+                                <div class="arrow text-center process-step" id="verify-step-arrow-2">↓</div>
+                                <div class="process-step" id="verify-step-3">
+                                    <div class="flex items-center bg-purple-100 p-3 rounded">
+                                        <i class="fas fa-key text-purple-600 mr-3"></i>
+                                        <span>3. 公開鍵で署名を復号化</span>
+                                    </div>
+                                </div>
+                                <div class="arrow text-center process-step" id="verify-step-arrow-3">↓</div>
+                                <div class="process-step" id="verify-step-4">
+                                    <div class="flex items-center bg-yellow-100 p-3 rounded">
+                                        <i class="fas fa-check-circle text-yellow-600 mr-3"></i>
+                                        <span>4. ハッシュ値を比較</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Digital Signature Demo -->
+                <div class="bg-white border-2 border-gray-200 p-6 rounded-lg shadow-md">
+                    <h3 class="text-2xl font-semibold mb-4 text-indigo-700">電子署名デモンストレーション</h3>
+                    <p class="mb-6 text-gray-700">実際に文書に電子署名を付与し、その署名を検証してみましょう。</p>
+
+                    <div class="space-y-6">
+                        <div>
+                            <button onclick="generateSigningKeys()" class="bg-indigo-600 text-white py-2 px-4 rounded-lg hover:bg-indigo-700 transition duration-200">
+                                <i class="fas fa-cog mr-2"></i>署名用鍵ペアを生成
+                            </button>
+                            <span id="signingKeyStatus" class="ml-4 text-gray-600">
+                                <i class="fas fa-info-circle mr-1"></i>鍵ペアを生成してください
+                            </span>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium mb-2">署名する文書：</label>
+                            <textarea id="documentToSign" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent h-32" placeholder="署名したい文書の内容を入力してください">重要な契約書
+
+この契約により、甲と乙は以下の条件に合意します：
+- 契約期間：2024年4月1日〜2025年3月31日
+- 契約金額：1,000,000円
+- 支払い条件：月末締め翌月末払い
+
+甲：田中太郎　乙：山田花子</textarea>
+                        </div>
+
+                        <div class="flex flex-wrap gap-4">
+                            <button onclick="signDocument()" class="bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 transition duration-200" disabled id="signBtn">
+                                <i class="fas fa-signature mr-2"></i>文書に署名
+                            </button>
+                            <button onclick="verifySignature()" class="bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition duration-200" disabled id="verifyBtn">
+                                <i class="fas fa-check-circle mr-2"></i>署名を検証
+                            </button>
+                            <button onclick="tamperdDocument()" class="bg-orange-600 text-white py-2 px-4 rounded-lg hover:bg-orange-700 transition duration-200">
+                                <i class="fas fa-edit mr-2"></i>文書を改ざん（実験用）
+                            </button>
+                        </div>
+
+                        <div class="grid md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-sm font-medium mb-2">電子署名：</label>
+                                <div id="digitalSignature" class="w-full p-3 border bg-gray-100 rounded-lg h-32 overflow-y-auto text-xs hash-output">署名ボタンを押してください</div>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium mb-2">検証結果：</label>
+                                <div id="verificationResult" class="w-full p-3 border bg-gray-100 rounded-lg h-32 flex items-center justify-center text-gray-500">検証ボタンを押してください</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tampering Detection Demo -->
+                <div class="mt-8 bg-red-50 p-6 rounded-lg border-l-4 border-red-400">
+                    <h4 class="text-xl font-semibold mb-3 text-red-800">改ざん検出実験</h4>
+                    <p class="text-gray-700 mb-4">上記のデモで「文書を改ざん」ボタンを押すと、文書の内容が少し変更されます。その後署名を検証すると、改ざんが検出されることを確認できます。</p>
+                    <div class="bg-white p-4 rounded border">
+                        <div class="flex items-center text-red-600">
+                            <i class="fas fa-exclamation-triangle mr-2"></i>
+                            <span class="font-semibold">なぜ改ざんが検出されるのか？</span>
+                        </div>
+                        <p class="mt-2 text-sm text-gray-700">文書が変更されると、ハッシュ値が変わります。しかし、電子署名は元の文書のハッシュ値に基づいて作成されているため、新しいハッシュ値と署名から復号化されたハッシュ値が一致しなくなり、改ざんが検出されます。</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Summary and Applications -->
+    <section class="py-12 bg-blue-800 text-white">
+        <div class="container mx-auto px-4">
+            <div class="max-w-6xl mx-auto">
+                <h2 class="text-3xl font-bold mb-8 text-center">まとめ：ブロックチェーンとの関連</h2>
+
+                <div class="grid md:grid-cols-3 gap-8 mb-8">
+                    <div class="bg-blue-700 p-6 rounded-lg">
+                        <div class="text-center mb-4">
+                            <i class="fas fa-fingerprint text-4xl text-blue-200"></i>
+                        </div>
+                        <h3 class="text-xl font-semibold mb-3 text-center">ハッシュ関数</h3>
+                        <ul class="space-y-2 text-blue-100">
+                            <li>• ブロックの識別ID</li>
+                            <li>• チェーン構造の実現</li>
+                            <li>• 取引データの完全性保証</li>
+                            <li>• マイニングの計算処理</li>
+                        </ul>
+                    </div>
+
+                    <div class="bg-blue-700 p-6 rounded-lg">
+                        <div class="text-center mb-4">
+                            <i class="fas fa-key text-4xl text-blue-200"></i>
+                        </div>
+                        <h3 class="text-xl font-semibold mb-3 text-center">公開鍵暗号</h3>
+                        <ul class="space-y-2 text-blue-100">
+                            <li>• ウォレットアドレスの生成</li>
+                            <li>• 暗号通貨の所有権証明</li>
+                            <li>• 安全な取引実行</li>
+                            <li>• スマートコントラクトの認証</li>
+                        </ul>
+                    </div>
+
+                    <div class="bg-blue-700 p-6 rounded-lg">
+                        <div class="text-center mb-4">
+                            <i class="fas fa-signature text-4xl text-blue-200"></i>
+                        </div>
+                        <h3 class="text-xl font-semibold mb-3 text-center">電子署名</h3>
+                        <ul class="space-y-2 text-blue-100">
+                            <li>• 取引の承認と認証</li>
+                            <li>• 送金の実行権証明</li>
+                            <li>• 改ざん防止機能</li>
+                            <li>• 二重支払い防止</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="bg-blue-700 p-6 rounded-lg">
+                    <h3 class="text-2xl font-semibold mb-4 text-center">実社会での応用例</h3>
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div>
+                            <h4 class="text-lg font-semibold mb-2 text-blue-200">金融・決済分野</h4>
+                            <ul class="space-y-1 text-blue-100 text-sm">
+                                <li>• ビットコイン、イーサリアムなどの暗号通貨</li>
+                                <li>• 中央銀行デジタル通貨（CBDC）</li>
+                                <li>• 国際送金サービス</li>
+                                <li>• デジタル証券取引</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h4 class="text-lg font-semibold mb-2 text-blue-200">その他の分野</h4>
+                            <ul class="space-y-1 text-blue-100 text-sm">
+                                <li>• サプライチェーン管理</li>
+                                <li>• 電子投票システム</li>
+                                <li>• デジタル身分証明</li>
+                                <li>• 知的財産権管理</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-8">
+        <div class="container mx-auto px-4 text-center">
+            <p class="text-gray-400 text-sm">このデモンストレーションは教育目的で作成されています。実際の暗号化アプリケーションでは、より強固なセキュリティ対策が必要です。</p>
+        </div>
+    </footer>
+
+    <script>
+        // Global variables for cryptographic keys
+        let rsaKeyPair = null;
+        let signingKeyPair = null;
+        let currentSignature = null;
+        let currentDocument = '';
+
+        // Hash Function Demo
+        async function calculateHash() {
+            const input = document.getElementById('hashInput').value;
+            const encoder = new TextEncoder();
+            const data = encoder.encode(input);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+            document.getElementById('hashOutput').textContent = hashHex;
+        }
+
+        // Data Integrity Demo
+        async function compareHashes() {
+            const original = document.getElementById('originalData').value;
+            const tampered = document.getElementById('tamperedData').value;
+
+            const encoder = new TextEncoder();
+
+            // Calculate hash for original data
+            const originalData = encoder.encode(original);
+            const originalHashBuffer = await crypto.subtle.digest('SHA-256', originalData);
+            const originalHashArray = Array.from(new Uint8Array(originalHashBuffer));
+            const originalHashHex = originalHashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+            document.getElementById('originalHash').textContent = originalHashHex;
+
+            // Calculate hash for tampered data
+            const tamperedData = encoder.encode(tampered);
+            const tamperedHashBuffer = await crypto.subtle.digest('SHA-256', tamperedData);
+            const tamperedHashArray = Array.from(new Uint8Array(tamperedHashBuffer));
+            const tamperedHashHex = tamperedHashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+            document.getElementById('tamperedHash').textContent = tamperedHashHex;
+
+            // Compare and show result
+            const resultDiv = document.getElementById('tamperResult');
+            const iconDiv = document.getElementById('tamperIcon');
+            const messageDiv = document.getElementById('tamperMessage');
+            const explanationDiv = document.getElementById('tamperExplanation');
+
+            resultDiv.classList.remove('hidden');
+
+            if (originalHashHex === tamperedHashHex) {
+                resultDiv.className = 'mt-4 p-4 rounded-lg bg-green-100 border border-green-300';
+                iconDiv.className = 'fas fa-check-circle text-green-600 text-2xl mr-3';
+                messageDiv.textContent = 'データに変更はありません';
+                messageDiv.className = 'text-lg font-semibold text-green-800';
+                explanationDiv.textContent = '両方のハッシュ値が一致しているため、データが同一であることが確認できます。';
+            } else {
+                resultDiv.className = 'mt-4 p-4 rounded-lg bg-red-100 border border-red-300';
+                iconDiv.className = 'fas fa-exclamation-triangle text-red-600 text-2xl mr-3';
+                messageDiv.textContent = '改ざんが検出されました！';
+                messageDiv.className = 'text-lg font-semibold text-red-800';
+                explanationDiv.textContent = 'ハッシュ値が異なっているため、データが変更されていることが分かります。わずかな変更でもハッシュ値は大きく変わります。';
+            }
+            explanationDiv.className = 'mt-2 text-gray-700';
+        }
+
+        // RSA Key Generation
+        async function generateRSAKeys() {
+            try {
+                rsaKeyPair = await crypto.subtle.generateKey(
+                    {
+                        name: "RSA-OAEP",
+                        modulusLength: 2048,
+                        publicExponent: new Uint8Array([1, 0, 1]),
+                        hash: "SHA-256"
+                    },
+                    true,
+                    ["encrypt", "decrypt"]
+                );
+
+                document.getElementById('keyStatus').innerHTML = '<i class="fas fa-check-circle text-green-600 mr-2"></i>RSA鍵ペアが生成されました';
+                document.getElementById('encryptBtn').disabled = false;
+
+            } catch (error) {
+                console.error('RSA key generation failed:', error);
+                document.getElementById('keyStatus').innerHTML = '<i class="fas fa-times-circle text-red-600 mr-2"></i>鍵生成に失敗しました';
+            }
+        }
+
+        // RSA Encryption
+        async function encryptMessage() {
+            if (!rsaKeyPair) {
+                alert('まず鍵ペアを生成してください');
+                return;
+            }
+
+            try {
+                const message = document.getElementById('rsaMessage').value;
+                const encoder = new TextEncoder();
+                const data = encoder.encode(message);
+
+                const encrypted = await crypto.subtle.encrypt(
+                    {
+                        name: "RSA-OAEP"
+                    },
+                    rsaKeyPair.publicKey,
+                    data
+                );
+
+                const encryptedArray = Array.from(new Uint8Array(encrypted));
+                const encryptedHex = encryptedArray.map(b => b.toString(16).padStart(2, '0')).join('');
+                document.getElementById('encryptedMessage').textContent = encryptedHex;
+                document.getElementById('decryptBtn').disabled = false;
+
+            } catch (error) {
+                console.error('Encryption failed:', error);
+                alert('暗号化に失敗しました。メッセージが長すぎる可能性があります。');
+            }
+        }
+
+        // RSA Decryption
+        async function decryptMessage() {
+            if (!rsaKeyPair) {
+                alert('まず鍵ペアを生成してください');
+                return;
+            }
+
+            try {
+                const encryptedHex = document.getElementById('encryptedMessage').textContent;
+                const encryptedArray = encryptedHex.match(/.{2}/g).map(byte => parseInt(byte, 16));
+                const encryptedBuffer = new Uint8Array(encryptedArray).buffer;
+
+                const decrypted = await crypto.subtle.decrypt(
+                    {
+                        name: "RSA-OAEP"
+                    },
+                    rsaKeyPair.privateKey,
+                    encryptedBuffer
+                );
+
+                const decoder = new TextDecoder();
+                const decryptedMessage = decoder.decode(decrypted);
+                document.getElementById('decryptedMessage').textContent = decryptedMessage;
+
+            } catch (error) {
+                console.error('Decryption failed:', error);
+                document.getElementById('decryptedMessage').textContent = '復号化に失敗しました';
+            }
+        }
+
+        // Digital Signature Key Generation
+        async function generateSigningKeys() {
+            try {
+                signingKeyPair = await crypto.subtle.generateKey(
+                    {
+                        name: "RSA-PSS",
+                        modulusLength: 2048,
+                        publicExponent: new Uint8Array([1, 0, 1]),
+                        hash: "SHA-256"
+                    },
+                    true,
+                    ["sign", "verify"]
+                );
+
+                document.getElementById('signingKeyStatus').innerHTML = '<i class="fas fa-check-circle text-green-600 mr-1"></i>署名用鍵ペアが生成されました';
+                document.getElementById('signBtn').disabled = false;
+
+            } catch (error) {
+                console.error('Signing key generation failed:', error);
+                document.getElementById('signingKeyStatus').innerHTML = '<i class="fas fa-times-circle text-red-600 mr-1"></i>鍵生成に失敗しました';
+            }
+        }
+
+        // Digital Signature Creation
+        async function signDocument() {
+            if (!signingKeyPair) {
+                alert('まず署名用鍵ペアを生成してください');
+                return;
+            }
+
+            try {
+                currentDocument = document.getElementById('documentToSign').value;
+                const encoder = new TextEncoder();
+                const data = encoder.encode(currentDocument);
+
+                // Animate signature process
+                animateSigningProcess();
+
+                const signature = await crypto.subtle.sign(
+                    {
+                        name: "RSA-PSS",
+                        saltLength: 32
+                    },
+                    signingKeyPair.privateKey,
+                    data
+                );
+
+                currentSignature = signature;
+                const signatureArray = Array.from(new Uint8Array(signature));
+                const signatureHex = signatureArray.map(b => b.toString(16).padStart(2, '0')).join('');
+                document.getElementById('digitalSignature').textContent = signatureHex;
+                document.getElementById('verifyBtn').disabled = false;
+
+            } catch (error) {
+                console.error('Signing failed:', error);
+                alert('署名に失敗しました');
+            }
+        }
+
+        // Digital Signature Verification
+        async function verifySignature() {
+            if (!signingKeyPair || !currentSignature) {
+                alert('まず文書に署名してください');
+                return;
+            }
+
+            try {
+                const currentDocumentContent = document.getElementById('documentToSign').value;
+                const encoder = new TextEncoder();
+                const data = encoder.encode(currentDocumentContent);
+
+                // Animate verification process
+                animateVerificationProcess();
+
+                const isValid = await crypto.subtle.verify(
+                    {
+                        name: "RSA-PSS",
+                        saltLength: 32
+                    },
+                    signingKeyPair.publicKey,
+                    currentSignature,
+                    data
+                );
+
+                const resultDiv = document.getElementById('verificationResult');
+
+                if (isValid) {
+                    resultDiv.innerHTML = `
+                        <div class="text-center">
+                            <i class="fas fa-check-circle text-green-600 text-4xl mb-2"></i>
+                            <div class="text-green-800 font-semibold">署名は有効です</div>
+                            <div class="text-sm text-gray-600 mt-1">文書は改ざんされていません</div>
+                        </div>
+                    `;
+                    resultDiv.className = 'w-full p-3 border bg-green-50 rounded-lg h-32 flex items-center justify-center';
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="text-center">
+                            <i class="fas fa-times-circle text-red-600 text-4xl mb-2"></i>
+                            <div class="text-red-800 font-semibold">署名は無効です</div>
+                            <div class="text-sm text-gray-600 mt-1">文書が改ざんされています</div>
+                        </div>
+                    `;
+                    resultDiv.className = 'w-full p-3 border bg-red-50 rounded-lg h-32 flex items-center justify-center';
+                }
+
+            } catch (error) {
+                console.error('Verification failed:', error);
+                alert('署名検証に失敗しました');
+            }
+        }
+
+        // Tamper Document for Demo
+        function tamperdDocument() {
+            const textarea = document.getElementById('documentToSign');
+            let content = textarea.value;
+
+            // Simple tampering - change amount or add text
+            if (content.includes('1,000,000円')) {
+                content = content.replace('1,000,000円', '10,000,000円');
+            } else if (content.includes('田中太郎')) {
+                content = content.replace('田中太郎', '佐藤太郎');
+            } else {
+                content += '\n※この行は後から追加されました';
+            }
+
+            textarea.value = content;
+
+            // Reset verification result
+            document.getElementById('verificationResult').innerHTML = '文書が変更されました。署名を再検証してください';
+            document.getElementById('verificationResult').className = 'w-full p-3 border bg-yellow-50 rounded-lg h-32 flex items-center justify-center text-yellow-700';
+        }
+
+        // Animation Functions
+        function animateSigningProcess() {
+            const steps = ['sign-step-1', 'sign-step-arrow-1', 'sign-step-2', 'sign-step-arrow-2', 'sign-step-3', 'sign-step-arrow-3', 'sign-step-4'];
+
+            steps.forEach((stepId, index) => {
+                setTimeout(() => {
+                    document.getElementById(stepId).classList.add('active');
+                }, index * 500);
+            });
+        }
+
+        function animateVerificationProcess() {
+            const steps = ['verify-step-1', 'verify-step-arrow-1', 'verify-step-2', 'verify-step-arrow-2', 'verify-step-3', 'verify-step-arrow-3', 'verify-step-4'];
+
+            steps.forEach((stepId, index) => {
+                setTimeout(() => {
+                    document.getElementById(stepId).classList.add('active');
+                }, index * 500);
+            });
+        }
+
+        // Initialize with sample hash calculation
+        window.addEventListener('load', function() {
+            calculateHash();
+            compareHashes();
+        });
+    </script>
+</body>
+</html>

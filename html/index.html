@@ -1,0 +1,32 @@
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NISTの安全性レベル分類</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet"/>
+</head>
+<body>
+<ul id="dynamic-links" class="mt-8 space-y-2"></ul>
+
+<script>
+    // リンクデータの配列
+    const pages = [
+        { name: "Cryptographic Technologies", url: "cryptographic_technologies.html" },
+        { name: "Encryption", url: "encryption.html" },
+        { name: "Home", url: "index.html" }
+    ];
+
+    // リンクを生成する関数
+    const linkContainer = document.getElementById("dynamic-links");
+    pages.forEach(page => {
+        const li = document.createElement("li");
+        const a = document.createElement("a");
+        a.href = page.url;
+        a.textContent = page.name;
+        a.className = "text-blue-600 hover:underline";
+        li.appendChild(a);
+        linkContainer.appendChild(li);
+    });
+</script>
+</body>
+</html>

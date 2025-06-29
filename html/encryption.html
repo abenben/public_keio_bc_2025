@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>暗号化アルゴリズムの安全性と使用期限 - 統合プレゼンテーション</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #1a1a1a;
+        }
+        
+        .slide-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #000;
+        }
+        
+        .slide {
+            width: 1920px;
+            height: 1080px;
+            background-color: #ffffff;
+            position: absolute;
+            display: none;
+            transform-origin: center center;
+            box-shadow: 0 0 50px rgba(0,0,0,0.5);
+        }
+        
+        .slide.active {
+            display: block;
+        }
+        
+        /* ナビゲーション */
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            z-index: 1000;
+            background: rgba(0,0,0,0.8);
+            padding: 15px 30px;
+            border-radius: 50px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .nav-btn {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .nav-btn:hover {
+            background: rgba(255,255,255,0.3);
+            transform: scale(1.05);
+        }
+        
+        .nav-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .slide-counter {
+            color: white;
+            padding: 0 20px;
+            display: flex;
+            align-items: center;
+            font-size: 16px;
+        }
+        
+        /* スライドインジケーター */
+        .slide-indicators {
+            position: fixed;
+            top: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 8px;
+            z-index: 1000;
+        }
+        
+        .indicator {
+            width: 40px;
+            height: 4px;
+            background: rgba(255,255,255,0.3);
+            border-radius: 2px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .indicator.active {
+            background: rgba(255,255,255,0.8);
+            transform: scaleY(1.5);
+        }
+        
+        /* フルスクリーンボタン */
+        .fullscreen-btn {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            z-index: 1000;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 20px;
+            transition: all 0.3s;
+        }
+        
+        .fullscreen-btn:hover {
+            background: rgba(0,0,0,0.9);
+            transform: scale(1.1);
+        }
+
+        /* キーボードヒント */
+        .keyboard-hint {
+            position: fixed;
+            bottom: 100px;
+            right: 30px;
+            z-index: 1000;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            font-size: 14px;
+            opacity: 0.7;
+            transition: opacity 0.3s;
+        }
+        
+        .keyboard-hint:hover {
+            opacity: 1;
+        }
+
+        /* レスポンシブスケーリング */
+        @media (max-width: 1920px) {
+            .slide {
+                transform: scale(calc(100vw / 1920));
+            }
+        }
+        
+        /* スライドコンテンツのスタイル調整 */
+        .slide-content {
+            width: 100%;
+            height: 100%;
+            padding: 80px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* 共通カラー定義 */
+        .security-80 { color: #ff6b6b; }
+        .security-112 { color: #ffd93d; }
+        .security-128 { color: #6bcf7f; }
+        
+        .bg-security-80 { background-color: #ff6b6b; }
+        .bg-security-112 { background-color: #ffd93d; }
+        .bg-security-128 { background-color: #6bcf7f; }
+
+        /* アニメーション */
+        @keyframes slideInFromRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        @keyframes slideInFromLeft {
+            from {
+                transform: translateX(-100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        .slide.active .animate-slide-in {
+            animation: slideInFromRight 0.6s ease-out forwards;
+        }
+        
+        .slide.active .animate-slide-in-left {
+            animation: slideInFromLeft 0.6s ease-out forwards;
+        }
+    </style>
+</head>
+<body>
+    <!-- スライドコンテナ -->
+    <div class="slide-container" id="slideContainer">
+        <!-- スライド1: タイトル -->
+        <div class="slide active" id="slide1">
+            <div class="slide-content">
+                <div class="text-center">
+                    <h1 class="text-7xl font-bold mb-8 animate-slide-in" style="color: #003876;">
+                        暗号化アルゴリズムの安全性と使用期限
+                    </h1>
+                    <p class="text-3xl text-gray-600 mb-12 animate-slide-in-left" style="animation-delay: 0.3s;">
+                        NISTが推奨する暗号技術の現在と未来
+                    </p>
+                    <div class="flex justify-center gap-8 mt-16">
+                        <div class="text-center animate-slide-in" style="animation-delay: 0.6s;">
+                            <i class="fas fa-lock text-6xl security-80 mb-4"></i>
+                            <p class="text-xl font-bold">80ビット安全性</p>
+                            <p class="text-lg text-gray-600">2014年以降禁止</p>
+                        </div>
+                        <div class="text-center animate-slide-in" style="animation-delay: 0.8s;">
+                            <i class="fas fa-shield-alt text-6xl security-112 mb-4"></i>
+                            <p class="text-xl font-bold">112ビット安全性</p>
+                            <p class="text-lg text-gray-600">2030年まで</p>
+                        </div>
+                        <div class="text-center animate-slide-in" style="animation-delay: 1s;">
+                            <i class="fas fa-lock text-6xl security-128 mb-4"></i>
+                            <p class="text-xl font-bold">128ビット安全性</p>
+                            <p class="text-lg text-gray-600">2031年以降も推奨</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- スライド2: 暗号技術の重要性 -->
+        <div class="slide" id="slide2">
+            <div class="slide-content">
+                <h2 class="text-5xl font-bold mb-12 text-center" style="color: #003876;">
+                    なぜ暗号技術が重要なのか？
+                </h2>
+                <div class="grid grid-cols-2 gap-12">
+                    <div class="bg-white p-8 rounded-xl shadow-lg animate-slide-in">
+                        <h3 class="text-3xl font-bold mb-6 flex items-center">
+                            <i class="fas fa-shield-alt mr-4 text-blue-600"></i>
+                            日常生活での活用
+                        </h3>
+                        <div class="space-y-6">
+                            <div class="flex items-start">
+                                <i class="fas fa-university text-2xl mr-4 mt-1 text-orange-500"></i>
+                                <div>
+                                    <p class="text-xl font-semibold">インターネットバンキング</p>
+                                    <p class="text-gray-600">個人情報と金融データの保護</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start">
+                                <i class="fas fa-shopping-cart text-2xl mr-4 mt-1 text-cyan-500"></i>
+                                <div>
+                                    <p class="text-xl font-semibold">オンラインショッピング</p>
+                                    <p class="text-gray-600">支払い情報の安全な転送</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start">
+                                <i class="fas fa-comment text-2xl mr-4 mt-1 text-green-500"></i>
+                                <div>
+                                    <p class="text-xl font-semibold">メッセージングアプリ</p>
+                                    <p class="text-gray-600">プライベート会話の保護</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white p-8 rounded-xl shadow-lg animate-slide-in-left" style="animation-delay: 0.3s;">
+                        <h3 class="text-3xl font-bold mb-6 flex items-center">
+                            <i class="fas fa-sync-alt mr-4 text-purple-600"></i>
+                            暗号強化の必要性
+                        </h3>
+                        <div class="space-y-6">
+                            <div class="flex items-start">
+                                <i class="fas fa-microchip text-2xl mr-4 mt-1 text-red-500"></i>
+                                <div>
+                                    <p class="text-xl font-semibold">計算能力の向上</p>
+                                    <p class="text-gray-600">古い暗号が解読されやすくなる</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start">
+                                <i class="fas fa-atom text-2xl mr-4 mt-1 text-indigo-500"></i>
+                                <div>
+                                    <p class="text-xl font-semibold">量子コンピューティング</p>
+                                    <p class="text-gray-600">将来的な脅威への対応</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start">
+                                <i class="fas fa-clock text-2xl mr-4 mt-1 text-yellow-500"></i>
+                                <div>
+                                    <p class="text-xl font-semibold">定期的な更新</p>
+                                    <p class="text-gray-600">デジタル社会の安全を維持</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-12 bg-blue-50 p-6 rounded-xl border-l-4 border-blue-500">
+                    <p class="text-xl italic text-gray-700">
+                        <i class="fas fa-quote-left mr-2 text-blue-500"></i>
+                        暗号技術は個人情報と金融安全の基石として機能し、デジタル社会における信頼の基盤となっています。
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- スライド3: 3つの安全性レベル -->
+        <div class="slide" id="slide3">
+            <div class="slide-content">
+                <h2 class="text-5xl font-bold mb-12 text-center" style="color: #003876;">
+                    NISTが定める3つの安全性レベル
+                </h2>
+                
+                <!-- タイムライン -->
+                <div class="relative mb-16">
+                    <div class="h-2 bg-gray-300 rounded-full"></div>
+                    <div class="absolute top-0 left-0 h-2 bg-gradient-to-r from-red-500 via-yellow-500 to-green-500 rounded-full" style="width: 100%;"></div>
+                    <div class="absolute -top-8 left-0 text-center" style="width: 15%;">
+                        <p class="font-bold text-lg">2014年</p>
+                    </div>
+                    <div class="absolute -top-8 left-1/2 transform -translate-x-1/2 text-center">
+                        <p class="font-bold text-lg">2030年</p>
+                    </div>
+                    <div class="absolute -top-8 right-0 text-center" style="width: 15%;">
+                        <p class="font-bold text-lg">2031年〜</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-3 gap-8">
+                    <!-- 80ビット安全性 -->
+                    <div class="bg-red-50 border-4 border-red-400 rounded-xl p-6 transform hover:scale-105 transition-transform animate-slide-in">
+                        <div class="text-center mb-6">
+                            <i class="fas fa-unlock-alt text-6xl text-red-500 mb-4"></i>
+                            <h3 class="text-3xl font-bold text-red-700">80ビット安全性</h3>
+                            <p class="text-xl text-red-600 font-semibold">2014年以降使用禁止</p>
+                        </div>
+                        <div class="space-y-3">
+                            <div class="bg-white p-3 rounded-lg">
+                                <p class="font-bold text-gray-700">共通鍵暗号</p>
+                                <p class="text-lg">AES 80</p>
+                            </div>
+                            <div class="bg-white p-3 rounded-lg">
+                                <p class="font-bold text-gray-700">公開鍵暗号</p>
+                                <p class="text-lg">RSA 1024</p>
+                            </div>
+                            <div class="bg-white p-3 rounded-lg">
+                                <p class="font-bold text-gray-700">ハッシュ関数</p>
+                                <p class="text-lg">SHA-1</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 112ビット安全性 -->
+                    <div class="bg-yellow-50 border-4 border-yellow-400 rounded-xl p-6 transform hover:scale-105 transition-transform animate-slide-in" style="animation-delay: 0.2s;">
+                        <div class="text-center mb-6">
+                            <i class="fas fa-house-lock text-6xl text-yellow-500 mb-4"></i>
+                            <h3 class="text-3xl font-bold text-yellow-700">112ビット安全性</h3>
+                            <p class="text-xl text-yellow-600 font-semibold">2030年まで容認</p>
+                        </div>
+                        <div class="space-y-3">
+                            <div class="bg-white p-3 rounded-lg">
+                                <p class="font-bold text-gray-700">共通鍵暗号</p>
+                                <p class="text-lg">AES 112</p>
+                            </div>
+                            <div class="bg-white p-3 rounded-lg">
+                                <p class="font-bold text-gray-700">公開鍵暗号</p>
+                                <p class="text-lg">RSA 2048</p>
+                            </div>
+                            <div class="bg-white p-3 rounded-lg">
+                                <p class="font-bold text-gray-700">ハッシュ関数</p>
+                                <p class="text-lg">SHA-224</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 128ビット安全性 -->
+                    <div class="bg-green-50 border-4 border-green-400 rounded-xl p-6 transform hover:scale-105 transition-transform animate-slide-in" style="animation-delay: 0.4s;">
+                        <div class="text-center mb-6">
+                            <i class="fas fa-shield-halved text-6xl text-green-500 mb-4"></i>
+                            <h3 class="text-3xl font-bold text-green-700">128ビット安全性</h3>
+                            <p class="text-xl text-green-600 font-semibold">2031年以降も推奨</p>
+                        </div>
+                        <div class="space-y-3">
+                            <div class="bg-white p-3 rounded-lg">
+                                <p class="font-bold text-gray-700">共通鍵暗号</p>
+                                <p class="text-lg">AES 128</p>
+                            </div>
+                            <div class="bg-white p-3 rounded-lg">
+                                <p class="font-bold text-gray-700">公開鍵暗号</p>
+                                <p class="text-lg">RSA 3072</p>
+                            </div>
+                            <div class="bg-white p-3 rounded-lg">
+                                <p class="font-bold text-gray-700">ハッシュ関数</p>
+                                <p class="text-lg">SHA-256</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- スライド4: 実用例 -->
+        <div class="slide" id="slide4">
+            <div class="slide-content">
+                <h2 class="text-5xl font-bold mb-12 text-center" style="color: #003876;">
+                    暗号技術の実用例
+                </h2>
+                <div class="grid grid-cols-3 gap-10">
+                    <!-- インターネットバンキング -->
+                    <div class="bg-white rounded-xl shadow-xl p-8 transform hover:scale-105 transition-transform animate-slide-in">
+                        <div class="text-center mb-6">
+                            <div class="w-24 h-24 mx-auto bg-orange-100 rounded-full flex items-center justify-center mb-4">
+                                <i class="fas fa-university text-5xl text-orange-600"></i>
+                            </div>
+                            <h3 class="text-2xl font-bold">インターネットバンキング</h3>
+                        </div>
+                        <div class="space-y-4">
+                            <div class="bg-gray-50 p-4 rounded-lg">
+                                <p class="font-semibold flex items-center mb-2">
+                                    <i class="fas fa-lock mr-2 text-blue-500"></i>
+                                    SSL/TLS暗号化
+                                </p>
+                                <p class="text-sm text-gray-600">AES 128ビット以上で通信を保護</p>
+                            </div>
+                            <div class="bg-gray-50 p-4 rounded-lg">
+                                <p class="font-semibold flex items-center mb-2">
+                                    <i class="fas fa-fingerprint mr-2 text-green-500"></i>
+                                    認証プロセス
+                                </p>
+                                <p class="text-sm text-gray-600">RSA 3072ビットで取引を検証</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- オンラインショッピング -->
+                    <div class="bg-white rounded-xl shadow-xl p-8 transform hover:scale-105 transition-transform animate-slide-in" style="animation-delay: 0.2s;">
+                        <div class="text-center mb-6">
+                            <div class="w-24 h-24 mx-auto bg-cyan-100 rounded-full flex items-center justify-center mb-4">
+                                <i class="fas fa-shopping-cart text-5xl text-cyan-600"></i>
+                            </div>
+                            <h3 class="text-2xl font-bold">オンラインショッピング</h3>
+                        </div>
+                        <div class="space-y-4">
+                            <div class="bg-gray-50 p-4 rounded-lg">
+                                <p class="font-semibold flex items-center mb-2">
+                                    <i class="fas fa-credit-card mr-2 text-purple-500"></i>
+                                    決済情報保護
+                                </p>
+                                <p class="text-sm text-gray-600">PCI DSS準拠のAES暗号化</p>
+                            </div>
+                            <div class="bg-gray-50 p-4 rounded-lg">
+                                <p class="font-semibold flex items-center mb-2">
+                                    <i class="fas fa-user-shield mr-2 text-indigo-500"></i>
+                                    セキュアチェックアウト
+                                </p>
+                                <p class="text-sm text-gray-600">ECDH 256ビットでセッション保護</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- メッセージアプリ -->
+                    <div class="bg-white rounded-xl shadow-xl p-8 transform hover:scale-105 transition-transform animate-slide-in" style="animation-delay: 0.4s;">
+                        <div class="text-center mb-6">
+                            <div class="w-24 h-24 mx-auto bg-green-100 rounded-full flex items-center justify-center mb-4">
+                                <i class="fas fa-comment text-5xl text-green-600"></i>
+                            </div>
+                            <h3 class="text-2xl font-bold">メッセージアプリ</h3>
+                        </div>
+                        <div class="space-y-4">
+                            <div class="bg-gray-50 p-4 rounded-lg">
+                                <p class="font-semibold flex items-center mb-2">
+                                    <i class="fas fa-key mr-2 text-yellow-500"></i>
+                                    E2E暗号化
+                                </p>
+                                <p class="text-sm text-gray-600">AES 128ビットでメッセージ保護</p>
+                            </div>
+                            <div class="bg-gray-50 p-4 rounded-lg">
+                                <p class="font-semibold flex items-center mb-2">
+                                    <i class="fas fa-random mr-2 text-red-500"></i>
+                                    鍵交換
+                                </p>
+                                <p class="text-sm text-gray-600">ECDH 256ビットで安全な共有</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-12 text-center bg-blue-50 p-6 rounded-xl">
+                    <p class="text-xl font-semibold text-gray-700">
+                        <i class="fas fa-info-circle mr-2 text-blue-500"></i>
+                        これらのサービスは全て、NISTの推奨に従い128ビット以上の安全性を採用しています
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- スライド5: 量子コンピューティングへの対応 -->
+        <div class="slide" id="slide5">
+            <div class="slide-content">
+                <h2 class="text-5xl font-bold mb-12 text-center" style="color: #003876;">
+                    量子コンピューティング時代への備え
+                </h2>
+                <div class="grid grid-cols-2 gap-12">
+                    <div class="animate-slide-in">
+                        <div class="bg-red-50 p-8 rounded-xl border-l-4 border-red-500 mb-8">
+                            <h3 class="text-3xl font-bold mb-4 flex items-center text-red-700">
+                                <i class="fas fa-exclamation-triangle mr-4"></i>
+                                現在の脅威
+                            </h3>
+                            <ul class="space-y-4 text-lg">
+                                <li class="flex items-start">
+                                    <i class="fas fa-atom text-red-500 mr-3 mt-1"></i>
+                                    <div>
+                                        <p class="font-semibold">量子コンピューターの発展</p>
+                                        <p class="text-gray-600">従来の暗号を短時間で解読可能に</p>
+                                    </div>
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="fas fa-microchip text-red-500 mr-3 mt-1"></i>
+                                    <div>
+                                        <p class="font-semibold">計算能力の指数関数的向上</p>
+                                        <p class="text-gray-600">ムーアの法則を超える進化速度</p>
+                                    </div>
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="fas fa-chart-line text-red-500 mr-3 mt-1"></i>
+                                    <div>
+                                        <p class="font-semibold">安全性の経年劣化</p>
+                                        <p class="text-gray-600">時間とともに暗号強度が低下</p>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="animate-slide-in-left" style="animation-delay: 0.3s;">
+                        <div class="bg-green-50 p-8 rounded-xl border-l-4 border-green-500">
+                            <h3 class="text-3xl font-bold mb-4 flex items-center text-green-700">
+                                <i class="fas fa-shield-alt mr-4"></i>
+                                対策と展望
+                            </h3>
+                            <ul class="space-y-4 text-lg">
+                                <li class="flex items-start">
+                                    <i class="fas fa-lock text-green-500 mr-3 mt-1"></i>
+                                    <div>
+                                        <p class="font-semibold">ポスト量子暗号の開発</p>
+                                        <p class="text-gray-600">量子耐性のある新世代暗号技術</p>
+                                    </div>
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="fas fa-sync-alt text-green-500 mr-3 mt-1"></i>
+                                    <div>
+                                        <p class="font-semibold">段階的な移行計画</p>
+                                        <p class="text-gray-600">2030年までに128ビット以上へ</p>
+                                    </div>
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="fas fa-graduation-cap text-green-500 mr-3 mt-1"></i>
+                                    <div>
+                                        <p class="font-semibold">継続的な研究開発</p>
+                                        <p class="text-gray-600">NISTによる新標準の策定</p>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-12 bg-gradient-to-r from-blue-500 to-purple-600 text-white p-8 rounded-xl">
+                    <p class="text-2xl text-center font-semibold">
+                        <i class="fas fa-lightbulb mr-3"></i>
+                        量子時代に向けて、今から128ビット以上の安全性への移行を始めることが重要です
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- スライド6: まとめ -->
+        <div class="slide" id="slide6">
+            <div class="slide-content">
+                <h2 class="text-5xl font-bold mb-12 text-center" style="color: #003876;">
+                    まとめ：安全なデジタル社会のために
+                </h2>
+                
+                <div class="grid grid-cols-3 gap-8 mb-12">
+                    <div class="bg-white p-6 rounded-xl shadow-lg text-center animate-slide-in">
+                        <div class="w-20 h-20 mx-auto bg-red-100 rounded-full flex items-center justify-center mb-4">
+                            <i class="fas fa-ban text-4xl text-red-600"></i>
+                        </div>
+                        <h3 class="text-2xl font-bold mb-3 text-red-700">80ビット安全性</h3>
+                        <p class="text-lg font-semibold">2014年以降使用禁止</p>
+                        <p class="mt-2 text-gray-600">既に脆弱性が証明され、使用は危険</p>
+                    </div>
+                    
+                    <div class="bg-white p-6 rounded-xl shadow-lg text-center animate-slide-in" style="animation-delay: 0.2s;">
+                        <div class="w-20 h-20 mx-auto bg-yellow-100 rounded-full flex items-center justify-center mb-4">
+                            <i class="fas fa-exclamation-triangle text-4xl text-yellow-600"></i>
+                        </div>
+                        <h3 class="text-2xl font-bold mb-3 text-yellow-700">112ビット安全性</h3>
+                        <p class="text-lg font-semibold">2030年まで使用可能</p>
+                        <p class="mt-2 text-gray-600">現在は安全だが、早期移行を推奨</p>
+                    </div>
+                    
+                    <div class="bg-white p-6 rounded-xl shadow-lg text-center animate-slide-in" style="animation-delay: 0.4s;">
+                        <div class="w-20 h-20 mx-auto bg-green-100 rounded-full flex items-center justify-center mb-4">
+                            <i class="fas fa-check-circle text-4xl text-green-600"></i>
+                        </div>
+                        <h3 class="text-2xl font-bold mb-3 text-green-700">128ビット安全性</h3>
+                        <p class="text-lg font-semibold">2031年以降も推奨</p>
+                        <p class="mt-2 text-gray-600">長期的な安全性を確保</p>
+                    </div>
+                </div>
+
+                <div class="bg-gradient-to-r from-blue-50 to-purple-50 p-8 rounded-xl border-2 border-blue-200">
+                    <h3 class="text-3xl font-bold mb-6 text-center" style="color: #003876;">
+                        <i class="fas fa-lightbulb mr-3 text-yellow-500"></i>
+                        重要なポイント
+                    </h3>
+                    <div class="grid grid-cols-2 gap-6">
+                        <div class="flex items-start">
+                            <i class="fas fa-check text-green-500 text-2xl mr-4 mt-1"></i>
+                            <div>
+                                <p class="text-xl font-semibold mb-2">定期的な更新が必要</p>
+                                <p class="text-gray-600">技術の進歩に合わせて暗号強度を更新</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start">
+                            <i class="fas fa-check text-green-500 text-2xl mr-4 mt-1"></i>
+                            <div>
+                                <p class="text-xl font-semibold mb-2">早期移行の重要性</p>
+                                <p class="text-gray-600">2030年を待たずに128ビットへ移行</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start">
+                            <i class="fas fa-check text-green-500 text-2xl mr-4 mt-1"></i>
+                            <div>
+                                <p class="text-xl font-semibold mb-2">量子時代への備え</p>
+                                <p class="text-gray-600">ポスト量子暗号の研究と実装</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start">
+                            <i class="fas fa-check text-green-500 text-2xl mr-4 mt-1"></i>
+                            <div>
+                                <p class="text-xl font-semibold mb-2">NISTガイドラインの遵守</p>
+                                <p class="text-gray-600">国際標準に従った実装</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-8 text-center">
+                    <p class="text-2xl font-bold" style="color: #003876;">
+                        安全なデジタル社会の実現は、適切な暗号技術の選択から始まります
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ナビゲーション -->
+    <div class="navigation">
+        <button class="nav-btn" id="prevBtn" onclick="changeSlide(-1)">
+            <i class="fas fa-chevron-left"></i>
+            前へ
+        </button>
+        <div class="slide-counter">
+            <span id="currentSlide">1</span> / <span id="totalSlides">6</span>
+        </div>
+        <button class="nav-btn" id="nextBtn" onclick="changeSlide(1)">
+            次へ
+            <i class="fas fa-chevron-right"></i>
+        </button>
+    </div>
+
+    <!-- スライドインジケーター -->
+    <div class="slide-indicators" id="slideIndicators"></div>
+
+    <!-- フルスクリーンボタン -->
+    <button class="fullscreen-btn" onclick="toggleFullscreen()">
+        <i class="fas fa-expand" id="fullscreenIcon"></i>
+    </button>
+
+    <!-- キーボードヒント -->
+    <div class="keyboard-hint">
+        <p><i class="fas fa-keyboard"></i> キーボードショートカット</p>
+        <p class="text-sm mt-2">← → : スライド切替</p>
+        <p class="text-sm">F : フルスクリーン</p>
+        <p class="text-sm">ESC : フルスクリーン解除</p>
+    </div>
+
+    <script>
+        let currentSlideIndex = 0;
+        const totalSlides = 6;
+        
+        // スライドの初期化
+        function initializeSlides() {
+            // インジケーターの作成
+            const indicatorsContainer = document.getElementById('slideIndicators');
+            for (let i = 0; i < totalSlides; i++) {
+                const indicator = document.createElement('div');
+                indicator.className = 'indicator' + (i === 0 ? ' active' : '');
+                indicator.onclick = () => goToSlide(i);
+                indicatorsContainer.appendChild(indicator);
+            }
+            
+            updateSlideVisibility();
+            fitSlideToScreen();
+        }
+        
+        // スライドの表示/非表示を更新
+        function updateSlideVisibility() {
+            const slides = document.querySelectorAll('.slide');
+            const indicators = document.querySelectorAll('.indicator');
+            
+            slides.forEach((slide, index) => {
+                slide.classList.toggle('active', index === currentSlideIndex);
+                
+                // アニメーションクラスをリセット
+                if (index === currentSlideIndex) {
+                    const animatedElements = slide.querySelectorAll('.animate-slide-in, .animate-slide-in-left');
+                    animatedElements.forEach(el => {
+                        el.style.animation = 'none';
+                        setTimeout(() => {
+                            el.style.animation = '';
+                        }, 10);
+                    });
+                }
+            });
+            
+            indicators.forEach((indicator, index) => {
+                indicator.classList.toggle('active', index === currentSlideIndex);
+            });
+            
+            // カウンターの更新
+            document.getElementById('currentSlide').textContent = currentSlideIndex + 1;
+            
+            // ナビゲーションボタンの状態更新
+            document.getElementById('prevBtn').disabled = currentSlideIndex === 0;
+            document.getElementById('nextBtn').disabled = currentSlideIndex === totalSlides - 1;
+        }
+        
+        // スライドを変更
+        function changeSlide(direction) {
+            const newIndex = currentSlideIndex + direction;
+            if (newIndex >= 0 && newIndex < totalSlides) {
+                currentSlideIndex = newIndex;
+                updateSlideVisibility();
+            }
+        }
+        
+        // 特定のスライドに移動
+        function goToSlide(index) {
+            if (index >= 0 && index < totalSlides) {
+                currentSlideIndex = index;
+                updateSlideVisibility();
+            }
+        }
+        
+        // フルスクリーン切り替え
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+                document.getElementById('fullscreenIcon').className = 'fas fa-compress';
+            } else {
+                document.exitFullscreen();
+                document.getElementById('fullscreenIcon').className = 'fas fa-expand';
+            }
+        }
+        
+        // スライドを画面に合わせる
+        function fitSlideToScreen() {
+            const container = document.getElementById('slideContainer');
+            const slides = document.querySelectorAll('.slide');
+            
+            const scaleX = window.innerWidth / 1920;
+            const scaleY = window.innerHeight / 1080;
+            const scale = Math.min(scaleX, scaleY);
+            
+            slides.forEach(slide => {
+                slide.style.transform = `scale(${scale})`;
+            });
+        }
+        
+        // キーボードイベント
+        document.addEventListener('keydown', (e) => {
+            switch(e.key) {
+                case 'ArrowLeft':
+                    changeSlide(-1);
+                    break;
+                case 'ArrowRight':
+                    changeSlide(1);
+                    break;
+                case 'f':
+                case 'F':
+                    toggleFullscreen();
+                    break;
+                case 'Escape':
+                    if (document.fullscreenElement) {
+                        document.exitFullscreen();
+                    }
+                    break;
+            }
+        });
+        
+        // ウィンドウリサイズ時の処理
+        window.addEventListener('resize', fitSlideToScreen);
+        
+        // 初期化
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeSlides();
+            document.getElementById('totalSlides').textContent = totalSlides;
+        });
+        
+        // フルスクリーン変更時の処理
+        document.addEventListener('fullscreenchange', () => {
+            const icon = document.getElementById('fullscreenIcon');
+            if (document.fullscreenElement) {
+                icon.className = 'fas fa-compress';
+            } else {
+                icon.className = 'fas fa-expand';
+            }
+            fitSlideToScreen();
+        });
+    </script>
+</body>
+</html> 
