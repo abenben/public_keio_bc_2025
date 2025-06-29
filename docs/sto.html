@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>セキュリティトークン入門</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        /* Atlassian Design System Inspired Styles */
+        :root {
+            --ds-text: #172B4D;
+            --ds-text-subtle: #42526E;
+            --ds-background-default: #F4F5F7;
+            --ds-surface: #FFFFFF;
+            --ds-border: #DFE1E6;
+            --ds-brand: #0052CC;
+            --ds-brand-hover: #0065FF;
+            --ds-danger: #DE350B;
+            --ds-radius: 8px;
+            --ds-shadow-raised: 0 1px 1px rgba(9, 30, 66, 0.25), 0 0 1px 1px rgba(9, 30, 66, 0.13);
+        }
+
+        body {
+            font-family: 'Noto Sans JP', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", "Arial", sans-serif;
+            background-color: var(--ds-background-default);
+            color: var(--ds-text);
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+        }
+
+        .presentation-container {
+            max-width: 1000px;
+            margin: 40px auto;
+            padding: 20px;
+        }
+
+        .slide {
+            background-color: var(--ds-surface);
+            border-radius: var(--ds-radius);
+            padding: 40px;
+            margin-bottom: 30px;
+            box-shadow: var(--ds-shadow-raised);
+            border: 1px solid var(--ds-border);
+        }
+
+        .slide-title-main {
+            font-size: 2.8em;
+            font-weight: 700;
+            color: var(--ds-text);
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .slide-subtitle {
+             font-size: 1.2em;
+             color: var(--ds-text-subtle);
+             text-align: center;
+             margin-bottom: 50px;
+        }
+
+        h2 {
+            font-size: 2.2em;
+            font-weight: 700;
+            color: var(--ds-text);
+            border-bottom: 3px solid var(--ds-brand);
+            padding-bottom: 10px;
+            margin-top: 0;
+            margin-bottom: 25px;
+        }
+
+        h3 {
+            font-size: 1.6em;
+            font-weight: 600;
+            color: var(--ds-text);
+            margin-top: 40px;
+            margin-bottom: 20px;
+            border-left: 5px solid var(--ds-brand);
+            padding-left: 15px;
+        }
+
+        p, ul {
+            font-size: 1em;
+            margin-bottom: 20px;
+        }
+
+        ul {
+            padding-left: 25px;
+        }
+
+        li {
+            margin-bottom: 10px;
+        }
+
+        strong, b {
+            font-weight: 700;
+            color: var(--ds-brand);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 30px 0;
+            font-size: 0.95em;
+            box-shadow: 0 0 5px rgba(0,0,0,0.05);
+        }
+
+        th, td {
+            border: 1px solid var(--ds-border);
+            padding: 15px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #F4F5F7;
+            font-weight: 600;
+            color: var(--ds-text-subtle);
+        }
+
+        td {
+             background-color: var(--ds-surface);
+        }
+
+        .chart-container {
+            width: 90%;
+            margin: 40px auto;
+            padding: 25px;
+            background-color: #FAFBFC;
+            border-radius: var(--ds-radius);
+            box-shadow: var(--ds-shadow-raised);
+            border: 1px solid var(--ds-border);
+        }
+
+        .chart-title {
+            text-align: center;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: var(--ds-text);
+        }
+
+        .chart-source {
+            text-align: center;
+            font-size: 0.85em;
+            color: var(--ds-text-subtle);
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="presentation-container">
+        <!-- Slide 1: Title -->
+        <div class="slide">
+            <h1 class="slide-title-main">フィンテックの未来を拓く<br>「セキュリティトークン」入門</h1>
+        </div>
+
+        <!-- Slide 2: What is ST? -->
+        <div class="slide">
+            <h2>セキュリティトークン(ST)とは？<br>— デジタル化された「証券」の正体</h2>
+
+            <h3>伝統的金融と先端技術の融合</h3>
+            <p>
+                セキュリティトークン（ST）、またはデジタル証券とは、株式や債券といった伝統的な金融商品（有価証券）を、<strong>ブロックチェーン技術</strong>を用いてデジタル化したものです。
+                これは単に証券を電子データで管理する従来の仕組みとは根本的に異なります。セキュリティトークンは、配当を受け取る権利などの法的な権利を、プログラム可能なデジタルの「トークン」そのものに埋め込んでいる点に最大の特徴があります。
+            </p>
+            <p>
+                「セキュリティ（有価証券）」という法的な信頼性と、「トークン」という技術的な革新性を組み合わせた、新しい資産クラスなのです。
+            </p>
+
+            <h3>「証券」と「トークン」の分解</h3>
+            <ul>
+                <li><strong>証券（有価証券）とは？</strong><br>
+                    株式や債券のように、それ自体が財産的な価値を持つ権利を証明するものです。保有者は配当や利息を受け取る権利などを持ち、市場で売買できます。
+                </li>
+                <li><strong>トークンとは？</strong><br>
+                    ブロックチェーンの文脈では、既存のブロックチェーン基盤を利用して発行される、価値や権利を表すデジタルの「しるし」です。資産の所有権やサービスの利用権などを表現できます。
+                </li>
+            </ul>
+
+            <h3>法的基盤：規制に準拠した金融商品</h3>
+            <p>
+                セキュリティトークンの最も重要な特徴の一つは、その法的地位が明確であることです。日本では、2020年5月に施行された改正金融商品取引法により、「<strong>電子記録移転有価証券表示権利等</strong>」として法的に位置づけられました。これにより、発行体と投資家の双方が安心して市場に参加できる環境が早期に整い、世界をリードするアドバンテージとなっています。
+            </p>
+
+            <p style="font-weight: 600; margin-top:40px;">表1: 金融資産の比較：伝統的証券 vs. 暗号資産 vs. セキュリティトークン</p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>特徴</th>
+                        <th>伝統的証券 (例: 株式)</th>
+                        <th>暗号資産 (例: ビットコイン)</th>
+                        <th>セキュリティトークン</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>法的根拠</strong></td>
+                        <td>会社法・金商法</td>
+                        <td>主に資金決済法</td>
+                        <td>金融商品取引法</td>
+                    </tr>
+                    <tr>
+                        <td><strong>裏付資産</strong></td>
+                        <td>企業の所有権や債権</td>
+                        <td>基本的になし</td>
+                        <td>不動産、株式、債権など</td>
+                    </tr>
+                    <tr>
+                        <td><strong>管理主体</strong></td>
+                        <td>中央集権的機関（例：ほふり）</td>
+                        <td>分散型ネットワーク</td>
+                        <td>発行者・プラットフォーム（許可制ブロックチェーン上）</td>
+                    </tr>
+                    <tr>
+                        <td><strong>プログラム可能性</strong></td>
+                        <td>低い</td>
+                        <td>高い</td>
+                        <td><strong>非常に高い（配当自動化など）</strong></td>
+                    </tr>
+                    <tr>
+                        <td><strong>主な投資家保護</strong></td>
+                        <td>金融商品取引法による厳格な規制</td>
+                        <td>限定的</td>
+                        <td>金融商品取引法による厳格な規制</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Slide 3: Why it matters -->
+        <div class="slide">
+            <h2>なぜ注目されるのか？<br>— 投資と資金調達の新しいカタチ</h2>
+
+            <h3>投資家にとってのメリット：投資の民主化</h3>
+            <ul>
+                <li><strong>小口化による投資機会の拡大</strong><br>
+                    最大のメリットは、投資の「小口化」です。従来、数千万円以上必要だった都心のビルなどの優良不動産へ、1口10万円といった少額から投資できるようになります。
+                </li>
+                <li><strong>多様な資産へのアクセス</strong><br>
+                    不動産だけでなく、航空機やアート作品など、これまで個人では投資が難しかった様々な資産への扉を開きます。
+                </li>
+                <li><strong>新たなリターンの形</strong><br>
+                    金銭的な配当だけでなく、物件の店舗で使える割引クーポンなど、プログラム可能な非金銭リターンを組み合わせることができます。
+                </li>
+                <li><strong>取引の利便性と透明性</strong><br>
+                    スマホで簡単に売買でき、将来的には24時間取引も期待されます。取引記録はブロックチェーン上で透明に管理されます。
+                </li>
+            </ul>
+
+            <h3>発行体にとってのメリット：資金調達（STO）の革命</h3>
+            <ul>
+                <li><strong>新たな資金調達手段</strong><br>
+                    セキュリティトークンを用いた資金調達「STO（Security Token Offering）」は、中小企業やスタートアップでも、幅広い投資家から直接資金を調達する道を開きます。
+                </li>
+                <li><strong>コスト削減と効率化</strong><br>
+                    ブロックチェーンの活用で、投資家名簿の管理や配当支払いを自動化。仲介コストや事務手間を大幅に削減します。
+                </li>
+                <li><strong>グローバルな投資家層へのアプローチ</strong><br>
+                    デジタル資産であるため国境を越えやすく、世界中の投資家にアピールできる可能性があります。
+                </li>
+            </ul>
+             <p>
+                セキュリティトークンの核心は、これまで市場で売買されず「塩漬け」だった不動産などの<strong>非流動資産（Real World Assets, RWA）</strong>に流動性を与え、新たな投資市場を創造する点にあります。
+            </p>
+        </div>
+
+        <!-- Slide 4: Technology & Ecosystem -->
+        <div class="slide">
+            <h2>STを支える技術とエコシステム</h2>
+
+            <h3>中核をなす技術スタック</h3>
+            <ul>
+                <li><strong>ブロックチェーン（Blockchain）</strong><br>
+                    誰でも参加できるパブリック型ではなく、金融規制を守るため、許可された参加者のみがアクセスできる<strong>「プライベート型」や「コンソーシアム型」</strong>が主に使用されます。これにより安全性と信頼性を担保します。
+                </li>
+                <li><strong>スマートコントラクト（Smart Contract）</strong><br>
+                    ブロックチェーン上に記録される「自動実行される契約プログラム」です。「特定の日に配当を自動送金する」といったルールをプログラムでき、業務効率化とコスト削減の要となります。
+                </li>
+            </ul>
+
+            <h3>セキュリティトークンのライフサイクル（簡易図解）</h3>
+            <ol>
+                <li><strong>原資産の準備と組成：</strong> 発行体が不動産などを準備し、信託銀行に信託します。</li>
+                <li><strong>トークン化：</strong> 発行プラットフォームで資産の権利をデジタルトークンに変換します。</li>
+                <li><strong>発行（STO）：</strong> 証券会社を通じて投資家を募集し、資金を調達します。</li>
+                <li><strong>管理：</strong> トークンの所有権はブロックチェーンで管理され、配当などが自動実行されます。</li>
+                <li><strong>流通：</strong> 投資家は、認可された私設取引システム（PTS）などでトークンを売買します。</li>
+            </ol>
+
+            <h3>エコシステム：新興勢力と金融大手の協業</h3>
+            <p>
+                市場の発展は、技術を持つフィンテック企業と、信頼と顧客基盤を持つ金融大手の「<strong>協業</strong>」によって支えられています。技術プラットフォーム企業、資産を管理する信託銀行、販売を担う証券会社などが連携するハイブリッド構造が、市場成長の原動力です。
+            </p>
+
+            <p style="font-weight: 600; margin-top:40px;">表2: 主要サービス・プラットフォーム一覧</p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>分類</th>
+                        <th>日本</th>
+                        <th>北米</th>
+                        <th>欧州</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>発行プラットフォーム</strong></td>
+                        <td>Progmat, Securitize Japan</td>
+                        <td>Securitize, INX, Polymath</td>
+                        <td>Tokeny, STOKR, Blocksquare</td>
+                    </tr>
+                    <tr>
+                        <td><strong>流通市場</strong></td>
+                        <td>大阪デジタルエクスチェンジ (ODX)</td>
+                        <td>Securitize Markets, tZERO, INX</td>
+                        <td>Archax, MERJ</td>
+                    </tr>
+                    <tr>
+                        <td><strong>カストディ（管理）</strong></td>
+                        <td>信託銀行 (MUFG, SMTC), Ginco</td>
+                        <td>Anchorage Digital, Coinbase Custody</td>
+                        <td>Zodia Custody, Crypto Finance</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Slide 5: Market Trends -->
+        <div class="slide">
+            <h2>市場の動向と将来性 — データで見る成長</h2>
+
+            <h3>グローバル市場：小規模ながら爆発的な成長ポテンシャル</h3>
+            <p>
+                世界のセキュリティトークン市場は、2033年までに約2.7兆円規模へ成長すると予測されており、年平均成長率（CAGR）は約27.3%という非常に高い水準です。この成長の背景には、世界に眠る何千兆円もの<strong>非流動資産（RWA）のトークン化</strong>という巨大な潮流があります。
+            </p>
+
+            <div class="chart-container">
+                <p class="chart-title">図1: 世界のセキュリティトークン市場規模予測（単位：10億米ドル）</p>
+                <div style="display: flex; justify-content: space-around; align-items: flex-end; height: 250px; border-left: 2px solid var(--ds-border); border-bottom: 2px solid var(--ds-border); position: relative;">
+                    <div style="position: absolute; left: -35px; top: 50%; transform: translateY(-50%) rotate(-90deg); color: var(--ds-text-subtle);">市場規模</div>
+                    <div style="position: absolute; bottom: -40px; left: 50%; transform: translateX(-50%); color: var(--ds-text-subtle);">年</div>
+                    <div style="display: flex; flex-direction: column; align-items: center; height: 100%; justify-content: flex-end;">
+                        <div style="color: var(--ds-text-subtle); font-size: 14px; margin-bottom: 5px;">$1.91</div>
+                        <div style="width: 60px; background-color: var(--ds-brand); height: 11%; border-radius: 4px 4px 0 0;" title="2024年: $1.91B"></div>
+                        <div style="margin-top: 8px; font-weight: 600;">2024</div>
+                    </div>
+                    <div style="display: flex; flex-direction: column; align-items: center; height: 100%; justify-content: flex-end;">
+                        <div style="color: var(--ds-text-subtle); font-size: 14px; margin-bottom: 5px;">$17.44</div>
+                        <div style="width: 60px; background-color: var(--ds-brand); height: 100%; border-radius: 4px 4px 0 0;" title="2033年: $17.44B"></div>
+                        <div style="margin-top: 8px; font-weight: 600;">2033</div>
+                    </div>
+                </div>
+                <p class="chart-source">出所: Business Research Insights のデータを基に作成。CAGR 約27.3%での成長を表現。</p>
+            </div>
+
+            <h3>日本市場：規制を睨みながら着実に成長</h3>
+            <p>
+                日本の公募STO市場も着実な拡大を見せ、2024年度末までの累計発行額は1,682億円に達しました。2024年度は税制改正を見極める動きから一時的に停滞しましたが、不透明感が払拭されたことで、<strong>2025年度は1,800億円規模へ急拡大</strong>すると予測されています。
+            </p>
+
+            <div class="chart-container">
+                <p class="chart-title">図2: 日本の公募セキュリティトークン発行額推移（単位：億円）</p>
+                <div style="position: relative; height: 300px; border-left: 2px solid var(--ds-border); border-bottom: 2px solid var(--ds-border); padding: 10px;">
+                     <div style="position: absolute; left: -35px; top: 50%; transform: translateY(-50%) rotate(-90deg); color: var(--ds-text-subtle);">発行額</div>
+                     <div style="position: absolute; bottom: -40px; left: 50%; transform: translateX(-50%); color: var(--ds-text-subtle);">年度</div>
+                    <svg style="width: 100%; height: 100%;" viewBox="0 0 500 280">
+                        <defs>
+                            <linearGradient id="line-gradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                                <stop offset="0%" style="stop-color:#0052CC;stop-opacity:0.3"/>
+                                <stop offset="100%" style="stop-color:#0052CC;stop-opacity:0"/>
+                            </linearGradient>
+                        </defs>
+                        <polyline points="50,250 150,220 250,150 350,50 450,200" fill="none" stroke="#0052CC" stroke-width="3"/>
+                        <polyline points="50,250 150,220 250,150 350,50 450,200 450,280 50,280 50,250" fill="url(#line-gradient)" stroke="none"/>
+
+                        <g>
+                            <circle cx="150" cy="220" r="5" fill="white" stroke="#0052CC" stroke-width="2"/>
+                            <text x="145" y="210" font-size="14" fill="#42526E">242</text>
+                            <text x="140" y="270" font-size="14" fill="#42526E">2021</text>
+                        </g>
+                        <g>
+                            <circle cx="250" cy="150" r="5" fill="white" stroke="#0052CC" stroke-width="2"/>
+                            <text x="245" y="140" font-size="14" fill="#42526E">476</text>
+                            <text x="240" y="270" font-size="14" fill="#42526E">2022</text>
+                        </g>
+                         <g>
+                            <circle cx="350" cy="50" r="5" fill="white" stroke="#0052CC" stroke-width="2"/>
+                            <text x="345" y="40" font-size="14" fill="#42526E">976</text>
+                            <text x="340" y="270" font-size="14" fill="#42526E">2023</text>
+                        </g>
+                        <g>
+                            <circle cx="450" cy="200" r="5" fill="white" stroke="#0052CC" stroke-width="2"/>
+                            <text x="445" y="190" font-size="14" fill="#42526E">464</text>
+                            <text x="440" y="270" font-size="14" fill="#42526E">2024</text>
+                        </g>
+                         <g>
+                            <!-- Dotted line for prediction -->
+                            <line x1="450" y1="200" x2="520" y2="20" stroke="#DE350B" stroke-width="3" stroke-dasharray="5,5"/>
+                            <circle cx="520" cy="20" r="5" fill="white" stroke="#DE350B" stroke-width="2"/>
+                            <text x="500" y="10" font-size="14" fill="#DE350B">~1800</text>
+                            <text x="495" y="270" font-size="14" fill="#DE350B">2025(予)</text>
+                        </g>
+                    </svg>
+                </div>
+                <p class="chart-source">出所: BOOSTRY のデータを基に作成。2021-2022年度は累計額からの推計値を含む。</p>
+            </div>
+        </div>
+
+        <!-- Slide 6: Challenges & Future -->
+        <div class="slide">
+            <h2>課題と未来展望</h2>
+
+            <h3>乗り越えるべき現在の課題</h3>
+            <ul>
+                <li><strong>流通市場の流動性</strong><br>
+                    現在の最大の課題は、発行されたトークンを売買する「流通市場」が未発達なことです。売買したい時にすぐに取引できないと、投資家は参加しにくくなります。
+                </li>
+                <li><strong>法規制の進化と国際的な調和</strong><br>
+                    日本は先進的ですが、グローバルに見ると規制は様々です。国境を越えた取引のためには、国際的なルールの標準化が不可欠です。
+                </li>
+                <li><strong>技術的リスク</strong><br>
+                    ブロックチェーンを基盤とする以上、システム障害やハッキングといったリスクへの継続的な対策が求められます。
+                </li>
+            </ul>
+
+            <h3>未来のビジョン：金融の完全なる民主化</h3>
+            <p>
+                これらの課題を乗り越えた先には、「<strong>あらゆる価値が、一つのグローバルな市場で、24時間365日、効率的かつ透明に取引される世界の実現</strong>」というビジョンがあります。
+            </p>
+            <p>
+                不動産、株式、美術品といった資産の垣根が取り払われ、ニューヨークのビルの１平方メートルの所有権から、ヒット曲の著作権料を受け取る権利まで、あらゆる価値がトークン化されます。そして、世界中の誰もがスマートフォン一つで簡単に取引できるようになるかもしれません。
+            </p>
+            <p>
+                経済学を学ぶ皆さんにとって、これは単なる新商品ではなく、<strong>資本市場のあり方を根本から再設計する、世紀の変革の始まり</strong>です。セキュリティトークンは、未来の金融システムの中核を担う存在へと進化していくことでしょう。
+            </p>
+        </div>
+    </div>
+
+</body>
+</html>
