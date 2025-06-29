@@ -8,13 +8,16 @@
 <ul id="dynamic-links" class="mt-8 space-y-2"></ul>
 
 <script>
-    // リンクデータの配列
+    // ファイル名とタイトルの対応表
     const pages = [
         { name: "Cryptographic Technologies", url: "cryptographic_technologies.html" },
+        { name: "DEX (PDF)", url: "dex.pdf" },
         { name: "Encryption", url: "encryption.html" },
+        { name: "Privacy Tech", url: "privacy_tech.html" },
+        { name: "Stable Coin (PDF)", url: "stable_coin.pdf" },
+        { name: "STO", url: "sto.html" }
     ];
 
-    // リンクを生成する関数
     const linkContainer = document.getElementById("dynamic-links");
     pages.forEach(page => {
         const li = document.createElement("li");
