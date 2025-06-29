@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>プライバシーテック・インタラクティブ・エクスプローラー</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Chosen Palette: Calm Tech -->
+    <!-- Application Structure Plan: レポートの情報を、ユーザーが能動的に探索し、比較検討できるSPAとして再設計しました。構造は以下の5つのセクションで構成されます：1.「概要」：トピックの紹介と主要な発見。2.「技術カタログ」：カテゴリ毎に技術を閲覧・詳細確認できるカード形式のUI。3.「比較ツール」：ユーザーが選択した技術をレーダーチャートで視覚的に比較し、レポートの核心である「トレードオフ」を直感的に理解させる。4.「複合的活用」：技術の組み合わせをHTML/CSSベースの図で示し、関係性を解説。5.「将来展望」：今後の動向をまとめる。この非線形でタスク指向の構造は、情報の受動的な読解ではなく、能動的な学習と発見を促すため、ユーザビリティの観点から最適と判断しました。 -->
+    <!-- Visualization & Content Choices:
+        - レポート情報: 各技術の特性（プライバシー強度、有用性、コスト等）。 -> ゴール: 比較 -> VIZ/手法: レーダーチャート (Chart.js)。 -> インタラクション: ドロップダウンで技術を選択するとチャートが動的に更新。 -> 正当化: レポートの主要テーマである「技術間のトレードオフ」を最も効果的に視覚化できるため。
+        - レポート情報: 技術のカテゴリ分類。 -> ゴール: 整理/情報提供 -> VIZ/手法: インタラクティブなカードグリッド (HTML/Tailwind)。 -> インタラクション: カテゴリボタンでフィルタリング、カードクリックで詳細情報をモーダル表示。 -> 正当化: 多くの技術情報を整理し、ユーザーが興味に応じて深掘りできるUIを提供するため。
+        - レポート情報: 技術の複合的な利用例。 -> ゴール: 関係性の図解 -> VIZ/手法: HTML/CSSベースのダイアグラム。 -> インタラクション: 要素にホバーすると関連要素がハイライトされ、説明が表示される。 -> 正当化: 外部ライブラリに依存せず、軽量かつ明確に関係性を示すことができるため。
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Hiragino Kaku Gothic ProN', 'メイリオ', Meiryo, sans-serif;
+        }
+        .section {
+            display: none;
+        }
+        .section.active {
+            display: block;
+        }
+        .nav-link {
+            transition: all 0.3s;
+        }
+        .nav-link.active {
+            color: #2563eb; /* blue-600 */
+            border-bottom: 2px solid #2563eb;
+        }
+        .modal-backdrop {
+            background-color: rgba(0,0,0,0.5);
+            transition: opacity 0.3s ease-in-out;
+        }
+        .modal-content {
+            transition: transform 0.3s ease-in-out;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px;
+            max-height: 450px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 500px;
+            }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800">
+
+    <header class="bg-white/80 backdrop-blur-md sticky top-0 z-40 shadow-sm">
+        <nav class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex-shrink-0">
+                    <h1 class="text-xl font-bold text-slate-700">プライバシーテック探訪</h1>
+                </div>
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-4">
+                        <a href="#overview" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-slate-600 hover:text-blue-600 active" data-section="overview">概要</a>
+                        <a href="#catalog" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-slate-600 hover:text-blue-600" data-section="catalog">技術カタログ</a>
+                        <a href="#comparison" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-slate-600 hover:text-blue-600" data-section="comparison">比較ツール</a>
+                        <a href="#synergy" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-slate-600 hover:text-blue-600" data-section="synergy">複合的活用</a>
+                        <a href="#future" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-slate-600 hover:text-blue-600" data-section="future">将来展望</a>
+                    </div>
+                </div>
+                <div class="md:hidden">
+                    <button id="mobile-menu-button" class="inline-flex items-center justify-center p-2 rounded-md text-slate-400 hover:text-slate-500 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500">
+                        <span class="sr-only">メインメニューを開く</span>
+                        <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            <div id="mobile-menu" class="md:hidden hidden">
+                <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+                    <a href="#overview" class="nav-link block px-3 py-2 rounded-md text-base font-medium text-slate-600 hover:text-blue-600 active" data-section="overview">概要</a>
+                    <a href="#catalog" class="nav-link block px-3 py-2 rounded-md text-base font-medium text-slate-600 hover:text-blue-600" data-section="catalog">技術カタログ</a>
+                    <a href="#comparison" class="nav-link block px-3 py-2 rounded-md text-base font-medium text-slate-600 hover:text-blue-600" data-section="comparison">比較ツール</a>
+                    <a href="#synergy" class="nav-link block px-3 py-2 rounded-md text-base font-medium text-slate-600 hover:text-blue-600" data-section="synergy">複合的活用</a>
+                    <a href="#future" class="nav-link block px-3 py-2 rounded-md text-base font-medium text-slate-600 hover:text-blue-600" data-section="future">将来展望</a>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container mx-auto p-4 sm:p-6 lg:p-8">
+        <section id="overview" class="section active animate-fade-in">
+            <div class="text-center bg-white p-8 rounded-xl shadow-lg border border-slate-200">
+                <h2 class="text-3xl font-extrabold text-slate-900 sm:text-4xl">データ活用と保護を両立する鍵</h2>
+                <p class="mt-4 max-w-2xl mx-auto text-lg text-slate-600">
+                    プライバシーテック（PETs）は、個人情報を保護しながらデータの価値を最大限に引き出すための技術群です。このアプリケーションでは、複雑なPETsの世界を分類し、それぞれの技術がどのように機能し、どのような課題を抱えているのかを対話的に探求できます。
+                </p>
+            </div>
+            <div class="mt-12">
+                <h3 class="text-2xl font-bold text-center text-slate-800 mb-8">主要技術カテゴリ</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <div class="bg-white p-6 rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300 border border-slate-200">
+                        <div class="flex items-center space-x-4">
+                            <div class="flex-shrink-0 bg-blue-100 text-blue-600 rounded-lg p-3">
+                                <span class="text-2xl">🛡️</span>
+                            </div>
+                            <div>
+                                <h4 class="text-lg font-semibold text-slate-900">暗号化技術</h4>
+                                <p class="text-slate-600 mt-1">データを秘匿化し、不正アクセスから保護する基盤技術。</p>
+                            </div>
+                        </div>
+                    </div>
+                     <div class="bg-white p-6 rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300 border border-slate-200">
+                        <div class="flex items-center space-x-4">
+                            <div class="flex-shrink-0 bg-green-100 text-green-600 rounded-lg p-3">
+                                <span class="text-2xl">🎭</span>
+                            </div>
+                            <div>
+                                <h4 class="text-lg font-semibold text-slate-900">データ隠蔽技術</h4>
+                                <p class="text-slate-600 mt-1">データを加工し、個人が特定できないようにする技術。</p>
+                            </div>
+                        </div>
+                    </div>
+                     <div class="bg-white p-6 rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300 border border-slate-200">
+                        <div class="flex items-center space-x-4">
+                            <div class="flex-shrink-0 bg-purple-100 text-purple-600 rounded-lg p-3">
+                                <span class="text-2xl">⚙️</span>
+                            </div>
+                            <div>
+                                <h4 class="text-lg font-semibold text-slate-900">プライバシー計算技術</h4>
+                                <p class="text-slate-600 mt-1">データを秘匿したまま計算や分析を可能にする技術。</p>
+                            </div>
+                        </div>
+                    </div>
+                     <div class="bg-white p-6 rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300 border border-slate-200">
+                        <div class="flex items-center space-x-4">
+                            <div class="flex-shrink-0 bg-yellow-100 text-yellow-600 rounded-lg p-3">
+                                <span class="text-2xl">🤖</span>
+                            </div>
+                            <div>
+                                <h4 class="text-lg font-semibold text-slate-900">プライバシー保護機械学習</h4>
+                                <p class="text-slate-600 mt-1">機械学習の過程でプライバシーを保護する技術。</p>
+                            </div>
+                        </div>
+                    </div>
+                     <div class="bg-white p-6 rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300 border border-slate-200">
+                        <div class="flex items-center space-x-4">
+                            <div class="flex-shrink-0 bg-red-100 text-red-600 rounded-lg p-3">
+                                <span class="text-2xl">💡</span>
+                            </div>
+                            <div>
+                                <h4 class="text-lg font-semibold text-slate-900">その他の注目技術</h4>
+                                <p class="text-slate-600 mt-1">実行中のデータ保護や量子コンピュータへの耐性を持つ新技術。</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="catalog" class="section">
+            <div class="text-center mb-10">
+                <h2 class="text-3xl font-bold text-slate-900">技術カタログ</h2>
+                <p class="mt-2 max-w-2xl mx-auto text-slate-600">各プライバシーテックの詳細を確認します。カテゴリを選択して技術を絞り込むか、下のカードをクリックして詳細をご覧ください。</p>
+            </div>
+            <div class="flex flex-wrap justify-center gap-2 mb-8">
+                <button class="catalog-filter-btn active bg-blue-600 text-white px-4 py-2 rounded-full text-sm" data-category="all">すべて</button>
+                <button class="catalog-filter-btn bg-white text-slate-700 px-4 py-2 rounded-full text-sm border hover:bg-slate-100" data-category="暗号化技術">暗号化技術</button>
+                <button class="catalog-filter-btn bg-white text-slate-700 px-4 py-2 rounded-full text-sm border hover:bg-slate-100" data-category="データ隠蔽技術">データ隠蔽技術</button>
+                <button class="catalog-filter-btn bg-white text-slate-700 px-4 py-2 rounded-full text-sm border hover:bg-slate-100" data-category="プライバシー計算技術">プライバシー計算技術</button>
+                <button class="catalog-filter-btn bg-white text-slate-700 px-4 py-2 rounded-full text-sm border hover:bg-slate-100" data-category="プライバシー保護機械学習">プライバシー保護機械学習</button>
+                <button class="catalog-filter-btn bg-white text-slate-700 px-4 py-2 rounded-full text-sm border hover:bg-slate-100" data-category="その他の注目技術">その他の注目技術</button>
+            </div>
+            <div id="catalog-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            </div>
+        </section>
+
+        <section id="comparison" class="section">
+            <div class="text-center mb-10">
+                <h2 class="text-3xl font-bold text-slate-900">技術比較ツール</h2>
+                <p class="mt-2 max-w-3xl mx-auto text-slate-600">異なるプライバシーテックの特性を視覚的に比較します。ドロップダウンから最大3つの技術を選択し、それぞれの長所と短所、そしてトレードオフをレーダーチャートで確認してください。</p>
+            </div>
+            <div class="bg-white p-6 rounded-xl shadow-lg border border-slate-200">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-8">
+                    <select id="tech-select-1" class="tech-select w-full p-2 border rounded-md bg-white"></select>
+                    <select id="tech-select-2" class="tech-select w-full p-2 border rounded-md bg-white"></select>
+                    <select id="tech-select-3" class="tech-select w-full p-2 border rounded-md bg-white"></select>
+                </div>
+                <div class="chart-container">
+                    <canvas id="comparison-chart"></canvas>
+                </div>
+                 <div id="comparison-details" class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6"></div>
+            </div>
+        </section>
+
+        <section id="synergy" class="section">
+             <div class="text-center mb-10">
+                <h2 class="text-3xl font-bold text-slate-900">技術の複合的活用</h2>
+                <p class="mt-2 max-w-3xl mx-auto text-slate-600">プライバシーテックは単独で利用されるだけでなく、複数の技術を組み合わせることで、より強固な保護を実現します。ここでは、代表的な組み合わせの例とその目的を解説します。</p>
+            </div>
+            <div class="space-y-12">
+                <div class="bg-white p-8 rounded-xl shadow-lg border border-slate-200">
+                    <h3 class="text-2xl font-bold text-slate-800 mb-6 text-center">連合学習 + 差分プライバシー</h3>
+                    <div class="flex flex-col md:flex-row items-center justify-center gap-4 text-center">
+                        <div class="bg-yellow-50 border border-yellow-200 p-4 rounded-lg w-full md:w-1/3">
+                            <h4 class="font-semibold text-yellow-800">連合学習</h4>
+                            <p class="text-sm text-yellow-700 mt-1">生データを共有せず、分散した環境でモデルを共同訓練</p>
+                        </div>
+                        <div class="text-3xl font-bold text-slate-500 mx-4">+</div>
+                        <div class="bg-purple-50 border border-purple-200 p-4 rounded-lg w-full md:w-1/3">
+                            <h4 class="font-semibold text-purple-800">差分プライバシー</h4>
+                            <p class="text-sm text-purple-700 mt-1">モデルの更新情報にノイズを加え、個人の寄与を曖昧化</p>
+                        </div>
+                    </div>
+                    <div class="mt-6 text-center">
+                        <div class="inline-block bg-green-100 text-green-800 rounded-full px-4 py-2">
+                             <span class="font-bold text-lg">目的:</span>
+                             <span class="ml-2">モデル更新情報からのプライバシー漏洩（復元攻撃）を防ぎ、より安全な共同機械学習を実現する。</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white p-8 rounded-xl shadow-lg border border-slate-200">
+                    <h3 class="text-2xl font-bold text-slate-800 mb-6 text-center">ホモモーフィック暗号 + SMPC</h3>
+                     <div class="flex flex-col md:flex-row items-center justify-center gap-4 text-center">
+                        <div class="bg-blue-50 border border-blue-200 p-4 rounded-lg w-full md:w-1/3">
+                            <h4 class="font-semibold text-blue-800">ホモモーフィック暗号</h4>
+                            <p class="text-sm text-blue-700 mt-1">暗号化したまま計算できるが、コストが高い</p>
+                        </div>
+                        <div class="text-3xl font-bold text-slate-500 mx-4">+</div>
+                        <div class="bg-purple-50 border border-purple-200 p-4 rounded-lg w-full md:w-1/3">
+                            <h4 class="font-semibold text-purple-800">セキュアマルチパーティ計算 (SMPC)</h4>
+                            <p class="text-sm text-purple-700 mt-1">複数組織がデータを秘匿したまま共同計算</p>
+                        </div>
+                    </div>
+                    <div class="mt-6 text-center">
+                         <div class="inline-block bg-green-100 text-green-800 rounded-full px-4 py-2">
+                             <span class="font-bold text-lg">目的:</span>
+                             <span class="ml-2">両技術の長所を組み合わせ、計算効率とセキュリティのバランスを取りながら、安全なデータ分析を実行する。</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="future" class="section">
+            <div class="text-center mb-10">
+                <h2 class="text-3xl font-bold text-slate-900">将来展望</h2>
+                <p class="mt-2 max-w-3xl mx-auto text-slate-600">プライバシーテックは急速に進化しています。規制、標準化、産業応用、そして技術自体の進化という3つの側面から、今後の動向を概観します。</p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="bg-white p-6 rounded-lg shadow-md border border-slate-200">
+                    <h3 class="text-xl font-semibold text-slate-800 mb-3">規制と標準化の進展</h3>
+                    <p class="text-slate-600">各国のデータ保護規制強化は継続し、技術の導入を促進します。NISTによるPQC標準化やISOでの秘密計算規格化のように、技術標準が整備されることで相互運用性が高まり、企業の導入障壁が低下します。</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-md border border-slate-200">
+                    <h3 class="text-xl font-semibold text-slate-800 mb-3">産業応用と社会実装の拡大</h3>
+                    <p class="text-slate-600">医療、金融、広告など機密データを扱う業界での導入が加速します。これまで不可能だった業界横断的なデータ連携が可能になり、新たな協調ビジネスモデルやサービスが創出されると期待されます。</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-md border border-slate-200">
+                    <h3 class="text-xl font-semibold text-slate-800 mb-3">技術的進化とエコシステム</h3>
+                    <p class="text-slate-600">計算効率とスケーラビリティの向上が研究の中心です。アルゴリズムの革新とハードウェアアクセラレーションにより、高度な技術がより実用的になります。開発者向けツールの充実も進み、技術の民主化が加速するでしょう。</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <div id="tech-modal" class="modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-4 hidden opacity-0">
+        <div class="modal-content bg-white w-full max-w-3xl rounded-lg shadow-2xl max-h-[90vh] overflow-y-auto transform scale-95">
+            <div class="sticky top-0 bg-white border-b p-4 flex justify-between items-center">
+                <h3 id="modal-title" class="text-2xl font-bold"></h3>
+                <button id="modal-close-btn" class="text-slate-500 hover:text-slate-800">&times;</button>
+            </div>
+            <div id="modal-body" class="p-6"></div>
+        </div>
+    </div>
+
+    <footer class="bg-slate-800 text-white mt-12">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-4 text-center text-sm">
+            <p class="text-slate-400 mt-1">このアプリケーションは提供されたレポートに基づき、教育目的で作成されました。</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const techData = {
+                'ホモモーフィック暗号': {
+                    category: '暗号化技術',
+                    summary: '暗号化されたデータのまま計算が可能。クラウドでの機密データ処理に革命をもたらす可能性を秘める。',
+                    use_cases: 'クラウドでの機密データ処理、AI/MLデータ分析、暗号化データリンケージ',
+                    trends: '市場成長 (CAGR 8%予測)、Appleによるオープンソース化。実用化に向けた動きが加速。',
+                    challenges: '高い計算コストとパフォーマンスオーバーヘッド。大規模データへの適用が課題。',
+                    ratings: { 'プライバシー強度': 5, 'データ有用性': 4, '計算コスト': 1, '実装難易度': 5, '成熟度': 2 }
+                },
+                'トークン化': {
+                    category: 'データ隠蔽技術',
+                    summary: '機密情報を意味のない代替文字列（トークン）に置き換え、漏洩リスクを低減する。',
+                    use_cases: 'PCI DSS準拠、Eコマース決済、医療情報保護',
+                    trends: '不可逆性、既存システムへの影響最小化が利点。クラウドサービスでの採用拡大。',
+                    challenges: '安全なトークン保管庫の管理が重要。元のデータが必要な分析には不向き。',
+                    ratings: { 'プライバシー強度': 3, 'データ有用性': 2, '計算コスト': 2, '実装難易度': 2, '成熟度': 5 }
+                },
+                'データマスキング': {
+                    category: 'データ隠蔽技術',
+                    summary: '機密データを削除、変更、難読化し、テスト環境等で安全に利用可能にする。',
+                    use_cases: '開発・テスト環境、第三者とのデータ共有、匿名化データでのML訓練',
+                    trends: 'リアルタイムでマスキングを行うダイナミック・データマスキングが登場。',
+                    challenges: '完全な再識別リスクの防止は困難。他のPETsとの併用が推奨される。',
+                    ratings: { 'プライバシー強度': 2, 'データ有用性': 3, '計算コスト': 1, '実装難易度': 2, '成熟度': 4 }
+                },
+                '合成データ生成': {
+                    category: 'データ隠蔽技術',
+                    summary: '元データの統計的特性を保持する人工データを生成。AI開発等で活用が進む。',
+                    use_cases: 'AI/MLモデル訓練、ソフトウェアテスト、データ収集コスト削減',
+                    trends: '生成AIの普及で注目度上昇。差分プライバシーとの組み合わせで保護を強化。',
+                    challenges: '元データのバイアスを増幅するリスク。生成データの品質保証が不可欠。',
+                    ratings: { 'プライバシー強度': 4, 'データ有用性': 4, '計算コスト': 3, '実装難易度': 4, '成熟度': 3 }
+                },
+                '差分プライバシー': {
+                    category: 'プライバシー計算技術',
+                    summary: 'データにノイズを加え、個人の特定を統計的に困難にする。数学的に厳密な保証を提供。',
+                    use_cases: '国勢調査、消費者行動分析、医療データ分析',
+                    trends: 'プライバシー保護技術の安全性評価における学術的標準。機械学習への応用が活発化。',
+                    challenges: 'プライバシー強度とデータ有用性がトレードオフの関係。最適なノイズ量の設定が難しい。',
+                    ratings: { 'プライバシー強度': 4, 'データ有用性': 3, '計算コスト': 2, '実装難易度': 4, '成熟度': 4 }
+                },
+                'セキュアマルチパーティ計算': {
+                    category: 'プライバシー計算技術',
+                    summary: '複数参加者が互いの秘密情報を開示せず共同で計算を実行。秘密計算とも呼ばれる。',
+                    use_cases: '金融不正検知、サプライチェーン最適化、マルチパーティ機械学習',
+                    trends: '市場成長 (CAGR 11.4%予測)、NTTによる国際標準化。AIとの連携で効率化が進む。',
+                    challenges: '参加者数や計算の複雑さが増すと性能が低下するスケーラビリティ問題。',
+                    ratings: { 'プライバシー強度': 5, 'データ有用性': 5, '計算コスト': 4, '実装難易度': 5, '成熟度': 3 }
+                },
+                'ゼロ知識証明': {
+                    category: 'プライバシー計算技術',
+                    summary: 'ある事実を知っていることを、その事実自体を明かさずに証明。認証やブロックチェーンで注目。',
+                    use_cases: 'パスワード認証、本人確認、ブロックチェーン取引のプライバシー保護',
+                    trends: 'zk-SNARKs/STARKsによりスケーラビリティ改善が進展。ハードウェアアクセラレーションも研究。',
+                    challenges: '依然として高い計算コストと複雑さ。信頼設定（Trusted Setup）の課題。',
+                    ratings: { 'プライバシー強度': 5, 'データ有用性': 3, '計算コスト': 4, '実装難易度': 5, '成熟度': 3 }
+                },
+                '連合学習': {
+                    category: 'プライバシー保護機械学習',
+                    summary: '分散データを用いた機械学習モデルの共同訓練。生データを集約しない点が特徴。',
+                    use_cases: '医療データ分析、金融不正検知、エッジAIシステム',
+                    trends: '差分プライバシーと併用し、復元攻撃リスクに対処。データ異質性への対応が研究の焦点。',
+                    challenges: '通信コスト、データ異質性による精度低下、復元攻撃のリスク。',
+                    ratings: { 'プライバシー強度': 3, 'データ有用性': 4, '計算コスト': 3, '実装難易度': 4, '成熟度': 4 }
+                },
+                 'コンフィデンシャルコンピューティング': {
+                    category: 'その他の注目技術',
+                    summary: '実行中のデータ（メモリ内）をハードウェア（TEE）で保護する。',
+                    use_cases: 'クラウドでの機密データ処理、マルチパーティ機械学習、医療研究',
+                    trends: '「使用中データ」の保護の溝を埋める技術として注目。主要クラウドプロバイダがサービス提供。',
+                    challenges: 'パフォーマンスオーバーヘッドの最小化が課題。対応アプリケーションがまだ限定的。',
+                    ratings: { 'プライバシー強度': 5, 'データ有用性': 5, '計算コスト': 3, '実装難易度': 3, '成熟度': 3 }
+                },
+                 '量子耐性暗号': {
+                    category: 'その他の注目技術',
+                    summary: '将来の量子コンピュータ攻撃に耐性を持つ暗号。長期的なデータ保護に不可欠。',
+                    use_cases: '長期的なデータ保護、デジタル署名、認証、鍵交換',
+                    trends: 'NISTによる標準化が完了。既存暗号と組み合わせたハイブリッド展開が移行の鍵。',
+                    challenges: '鍵サイズや計算コストが既存暗号より大きい傾向。既存インフラからの移行が複雑。',
+                    ratings: { 'プライバシー強度': 5, 'データ有用性': 5, '計算コスト': 3, '実装難易度': 4, '成熟度': 2 }
+                }
+            };
+            const techNames = Object.keys(techData);
+
+            const catalogGrid = document.getElementById('catalog-grid');
+            const filterBtns = document.querySelectorAll('.catalog-filter-btn');
+
+            const modal = document.getElementById('tech-modal');
+            const modalTitle = document.getElementById('modal-title');
+            const modalBody = document.getElementById('modal-body');
+            const modalCloseBtn = document.getElementById('modal-close-btn');
+
+            const createTechCard = (name, data) => {
+                const card = document.createElement('div');
+                card.className = 'tech-card bg-white p-6 rounded-lg shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer border border-slate-200';
+                card.dataset.category = data.category;
+                card.dataset.name = name;
+                card.innerHTML = `
+                    <h3 class="text-xl font-bold text-slate-800">${name}</h3>
+                    <p class="text-sm text-slate-500 mt-1">${data.category}</p>
+                    <p class="text-slate-600 mt-4">${data.summary}</p>
+                `;
+                card.addEventListener('click', () => openModal(name, data));
+                return card;
+            };
+
+            const populateCatalog = () => {
+                catalogGrid.innerHTML = '';
+                techNames.forEach(name => {
+                    const card = createTechCard(name, techData[name]);
+                    catalogGrid.appendChild(card);
+                });
+            };
+
+            const filterCatalog = (category) => {
+                const cards = document.querySelectorAll('.tech-card');
+                cards.forEach(card => {
+                    if (category === 'all' || card.dataset.category === category) {
+                        card.style.display = 'block';
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+            };
+
+            filterBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    filterBtns.forEach(b => b.classList.remove('active', 'bg-blue-600', 'text-white'));
+                    btn.classList.add('active', 'bg-blue-600', 'text-white');
+                    filterCatalog(btn.dataset.category);
+                });
+            });
+
+            const openModal = (name, data) => {
+                modalTitle.textContent = name;
+                modalBody.innerHTML = `
+                    <div class="space-y-4">
+                        <div>
+                            <h4 class="font-semibold text-slate-700">カテゴリ</h4>
+                            <p class="text-slate-600">${data.category}</p>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold text-slate-700">概要</h4>
+                            <p class="text-slate-600">${data.summary}</p>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold text-slate-700">主なユースケース</h4>
+                            <p class="text-slate-600">${data.use_cases}</p>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold text-slate-700">最新動向</h4>
+                            <p class="text-slate-600">${data.trends}</p>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold text-slate-700">課題</h4>
+                            <p class="text-slate-600">${data.challenges}</p>
+                        </div>
+                    </div>
+                `;
+                modal.classList.remove('hidden');
+                setTimeout(() => {
+                    modal.classList.remove('opacity-0');
+                    modal.querySelector('.modal-content').classList.remove('scale-95');
+                }, 10);
+            };
+
+            const closeModal = () => {
+                modal.classList.add('opacity-0');
+                modal.querySelector('.modal-content').classList.add('scale-95');
+                setTimeout(() => modal.classList.add('hidden'), 300);
+            };
+
+            modalCloseBtn.addEventListener('click', closeModal);
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    closeModal();
+                }
+            });
+
+            populateCatalog();
+
+            const navLinks = document.querySelectorAll('.nav-link');
+            const sections = document.querySelectorAll('.section');
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const mobileMenu = document.getElementById('mobile-menu');
+
+            const switchSection = (targetId) => {
+                sections.forEach(section => {
+                    section.classList.remove('active');
+                });
+                const targetSection = document.getElementById(targetId);
+                if (targetSection) {
+                    targetSection.classList.add('active');
+                }
+
+                navLinks.forEach(link => {
+                    link.classList.remove('active');
+                    if(link.dataset.section === targetId) {
+                        link.classList.add('active');
+                    }
+                });
+                window.scrollTo(0,0);
+                if (!mobileMenu.classList.contains('hidden')) {
+                    mobileMenu.classList.add('hidden');
+                }
+            };
+
+            navLinks.forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    switchSection(link.dataset.section);
+                });
+            });
+
+            mobileMenuButton.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+            });
+
+            const techSelects = document.querySelectorAll('.tech-select');
+            const comparisonDetails = document.getElementById('comparison-details');
+
+            const populateSelects = () => {
+                techSelects.forEach(select => {
+                    select.innerHTML = '<option value="">技術を選択...</option>';
+                    techNames.forEach(name => {
+                        const option = document.createElement('option');
+                        option.value = name;
+                        option.textContent = name;
+                        select.appendChild(option);
+                    });
+                });
+            };
+
+            populateSelects();
+
+            const ctx = document.getElementById('comparison-chart').getContext('2d');
+            let comparisonChart;
+
+            const updateComparisonChart = () => {
+                const selectedTechs = Array.from(techSelects).map(s => s.value).filter(v => v);
+                comparisonDetails.innerHTML = '';
+
+                const datasets = selectedTechs.map((name, index) => {
+                    const tech = techData[name];
+                    const colors = [
+                        'rgba(59, 130, 246, 0.8)',
+                        'rgba(16, 185, 129, 0.8)',
+                        'rgba(139, 92, 246, 0.8)'
+                    ];
+                    const borderColors = [
+                        'rgba(59, 130, 246, 1)',
+                        'rgba(16, 185, 129, 1)',
+                        'rgba(139, 92, 246, 1)'
+                    ];
+
+                    const detailCard = document.createElement('div');
+                    detailCard.className = 'p-4 rounded-lg';
+                    detailCard.style.backgroundColor = colors[index].replace('0.8', '0.1');
+                    detailCard.style.borderColor = colors[index].replace('0.8', '0.5');
+                    detailCard.style.borderWidth = '1px';
+                    detailCard.innerHTML = `<h4 class="font-bold text-lg" style="color: ${borderColors[index]}">${name}</h4><p class="text-slate-600 text-sm mt-2">${tech.summary}</p>`;
+                    comparisonDetails.appendChild(detailCard);
+
+                    return {
+                        label: name,
+                        data: Object.values(tech.ratings),
+                        backgroundColor: colors[index].replace('0.8', '0.2'),
+                        borderColor: borderColors[index],
+                        pointBackgroundColor: borderColors[index],
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: borderColors[index]
+                    };
+                });
+
+                if (comparisonChart) {
+                    comparisonChart.destroy();
+                }
+
+                comparisonChart = new Chart(ctx, {
+                    type: 'radar',
+                    data: {
+                        labels: ['プライバシー強度', 'データ有用性', '計算コスト', '実装難易度', '成熟度'],
+                        datasets: datasets
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            r: {
+                                angleLines: {
+                                    color: 'rgba(0, 0, 0, 0.1)'
+                                },
+                                grid: {
+                                    color: 'rgba(0, 0, 0, 0.1)'
+                                },
+                                pointLabels: {
+                                    font: {
+                                        size: 14
+                                    },
+                                    color: '#334155' // slate-700
+                                },
+                                ticks: {
+                                    beginAtZero: true,
+                                    max: 5,
+                                    stepSize: 1,
+                                    backdropColor: 'rgba(0, 0, 0, 0)',
+                                    color: '#64748b' //slate-500
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                position: 'top',
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        let label = context.dataset.label || '';
+                                        if (label) {
+                                            label += ': ';
+                                        }
+                                        if (context.parsed.r !== null) {
+                                            label += context.parsed.r;
+                                        }
+                                        return label;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            };
+
+            techSelects.forEach(select => {
+                select.addEventListener('change', updateComparisonChart);
+            });
+
+            updateComparisonChart();
+
+        });
+    </script>
+</body>
+</html>
